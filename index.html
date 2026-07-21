@@ -1719,6 +1719,7 @@
             const loader = document.getElementById('cheatsheet-frame-loader');
             if (loader) loader.classList.add('hide');
         }
+        
 
         function closeCheatsheetViewer() {
             document.getElementById('cheatsheet-viewer-modal').classList.add('hide');
@@ -3442,30 +3443,26 @@
                 if (onComplete) onComplete();
             };
         }
-        // --- FITUR FLOATING POMODORO (Document Picture-in-Picture) ---
+// --- FITUR FLOATING POMODORO (Document Picture-in-Picture) ---
         let pipWindow = null;
 
-        async func_togglePomodoroPiP = async function() {
-            // Cek apakah browser mendukung fitur Document PiP
+        async function togglePomodoroPiP() {
             if (!('documentPictureInPicture' in window)) {
                 showToast("Tidak Didukung", "Browser kamu belum mendukung floating window mode ini.");
                 return;
             }
 
-            // Jika jendela PiP sudah terbuka, tutup saja (kembalikan ke tab utama)
             if (pipWindow) {
                 pipWindow.close();
                 return;
             }
 
             try {
-                // Buka jendela mini melayang (ukuran 300x260 piksel)
                 pipWindow = await window.documentPictureInPicture.requestWindow({
                     width: 300,
                     height: 260
                 });
 
-                // Salin semua stylesheet/CSS utama agar desain glassmorphism & Tailwind ikut terbawa ke jendela mini
                 [...document.styleSheets].forEach((styleSheet) => {
                     try {
                         const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
@@ -3473,7 +3470,6 @@
                         style.textContent = cssRules;
                         pipWindow.document.head.appendChild(style);
                     } catch (e) {
-                        // Untuk stylesheet eksternal (seperti CDN Tailwind/FontAwesome), kita link-kan manual ke head PiP
                         const link = pipWindow.document.createElement('link');
                         link.rel = 'stylesheet';
                         link.href = styleSheet.href;
@@ -3481,7 +3477,6 @@
                     }
                 });
 
-                // Buat kerangka tampilan di dalam jendela mini melayang
                 const container = pipWindow.document.createElement('div');
                 container.className = "p-5 bg-[#050508] text-white flex flex-col items-center justify-center h-full select-none";
                 container.innerHTML = `
@@ -3501,7 +3496,6 @@
                 `;
                 pipWindow.document.body.appendChild(container);
 
-                // Sinkronisasi Tombol & Timer dari Tab Utama ke Jendela Mini
                 const updatePipElements = () => {
                     if (!pipWindow || pipWindow.closed) return;
                     const display = pipWindow.document.getElementById('pip-display');
@@ -3522,11 +3516,9 @@
                     }
                 };
 
-                // Jalankan sinkronisasi tiap detik
                 const syncInterval = setInterval(updatePipElements, 200);
                 updatePipElements();
 
-                // Hubungkan tombol di jendela mini agar mengontrol timer utama di tab
                 pipWindow.document.getElementById('pip-toggle-btn').onclick = () => {
                     togglePomodoro();
                     updatePipElements();
@@ -3536,7 +3528,6 @@
                     updatePipElements();
                 };
 
-                // Jika jendela mini ditutup oleh pengguna (klik tombol X)
                 pipWindow.addEventListener('pagehide', () => {
                     clearInterval(syncInterval);
                     pipWindow = null;
@@ -3548,10 +3539,7 @@
                 console.warn("Gagal membuka Picture-in-Picture:", error);
                 showToast("Gagal", "Fitur floating window diblokir oleh browser.");
             }
-        };
-
-        // Alias fungsi biar cocok dengan tombol HTML
-        window.togglePomodoroPiP = func_togglePomodoroPiP;
+        }
     </script>
 </body>
 </html>

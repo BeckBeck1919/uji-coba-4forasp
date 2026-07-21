@@ -733,6 +733,9 @@
             <div class="glass-premium p-6 rounded-2xl flex flex-col items-center">
                 <div class="w-full flex justify-between items-center mb-4">
                     <h3 class="font-bold text-white flex items-center gap-2"><i class="fas fa-stopwatch text-purple-400"></i> Pomodoro</h3>
+                    <button onclick="togglePomodoroPiP()" title="Jadikan Floating Window" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-purple-500/30 text-purple-300 flex items-center justify-center text-xs transition-colors">
+                <i class="fas fa-external-link-alt"></i>
+                </button>
                     <span id="pomodoro-mode" class="text-xs font-bold px-2 py-1 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">FOKUS</span>
                 </div>
                 
@@ -3439,6 +3442,116 @@
                 if (onComplete) onComplete();
             };
         }
+        // --- FITUR FLOATING POMODORO (Document Picture-in-Picture) ---
+        let pipWindow = null;
+
+        async func_togglePomodoroPiP = async function() {
+            // Cek apakah browser mendukung fitur Document PiP
+            if (!('documentPictureInPicture' in window)) {
+                showToast("Tidak Didukung", "Browser kamu belum mendukung floating window mode ini.");
+                return;
+            }
+
+            // Jika jendela PiP sudah terbuka, tutup saja (kembalikan ke tab utama)
+            if (pipWindow) {
+                pipWindow.close();
+                return;
+            }
+
+            try {
+                // Buka jendela mini melayang (ukuran 300x260 piksel)
+                pipWindow = await window.documentPictureInPicture.requestWindow({
+                    width: 300,
+                    height: 260
+                });
+
+                // Salin semua stylesheet/CSS utama agar desain glassmorphism & Tailwind ikut terbawa ke jendela mini
+                [...document.styleSheets].forEach((styleSheet) => {
+                    try {
+                        const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
+                        const style = pipWindow.document.createElement('style');
+                        style.textContent = cssRules;
+                        pipWindow.document.head.appendChild(style);
+                    } catch (e) {
+                        // Untuk stylesheet eksternal (seperti CDN Tailwind/FontAwesome), kita link-kan manual ke head PiP
+                        const link = pipWindow.document.createElement('link');
+                        link.rel = 'stylesheet';
+                        link.href = styleSheet.href;
+                        pipWindow.document.head.appendChild(link);
+                    }
+                });
+
+                // Buat kerangka tampilan di dalam jendela mini melayang
+                const container = pipWindow.document.createElement('div');
+                container.className = "p-5 bg-[#050508] text-white flex flex-col items-center justify-center h-full select-none";
+                container.innerHTML = `
+                    <div class="w-full flex justify-between items-center mb-3">
+                        <span id="pip-mode" class="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">FOKUS</span>
+                        <span class="text-xs text-gray-400 font-heading">4forASP Pomodoro</span>
+                    </div>
+                    <div class="text-4xl font-digital font-bold text-white text-glow mb-4 tracking-widest" id="pip-display">25:00</div>
+                    <div class="flex gap-2 w-full">
+                        <button id="pip-toggle-btn" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 font-bold text-xs shadow-lg transition-all">
+                            Mulai
+                        </button>
+                        <button id="pip-reset-btn" class="w-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs transition-colors">
+                            <i class="fas fa-redo-alt"></i>
+                        </button>
+                    </div>
+                `;
+                pipWindow.document.body.appendChild(container);
+
+                // Sinkronisasi Tombol & Timer dari Tab Utama ke Jendela Mini
+                const updatePipElements = () => {
+                    if (!pipWindow || pipWindow.closed) return;
+                    const display = pipWindow.document.getElementById('pip-display');
+                    const mode = pipWindow.document.getElementById('pip-mode');
+                    const toggleBtn = pipWindow.document.getElementById('pip-toggle-btn');
+                    
+                    if (display) display.innerText = document.getElementById('pomodoro-display').innerText;
+                    if (mode) {
+                        mode.innerText = document.getElementById('pomodoro-mode').innerText;
+                        mode.className = document.getElementById('pomodoro-mode').className + " text-[10px]";
+                    }
+                    if (toggleBtn) {
+                        const mainText = document.getElementById('pomo-text').innerText;
+                        toggleBtn.innerText = mainText;
+                        toggleBtn.className = mainText === 'Jeda' 
+                            ? "flex-1 py-2.5 rounded-xl bg-red-500 text-white font-bold text-xs shadow-lg transition-all" 
+                            : "flex-1 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 font-bold text-xs text-white shadow-lg transition-all";
+                    }
+                };
+
+                // Jalankan sinkronisasi tiap detik
+                const syncInterval = setInterval(updatePipElements, 200);
+                updatePipElements();
+
+                // Hubungkan tombol di jendela mini agar mengontrol timer utama di tab
+                pipWindow.document.getElementById('pip-toggle-btn').onclick = () => {
+                    togglePomodoro();
+                    updatePipElements();
+                };
+                pipWindow.document.getElementById('pip-reset-btn').onclick = () => {
+                    resetPomodoro();
+                    updatePipElements();
+                };
+
+                // Jika jendela mini ditutup oleh pengguna (klik tombol X)
+                pipWindow.addEventListener('pagehide', () => {
+                    clearInterval(syncInterval);
+                    pipWindow = null;
+                });
+
+                showToast("Floating Window Aktif", "Timer Pomodoro sekarang melayang di atas layar!");
+
+            } catch (error) {
+                console.warn("Gagal membuka Picture-in-Picture:", error);
+                showToast("Gagal", "Fitur floating window diblokir oleh browser.");
+            }
+        };
+
+        // Alias fungsi biar cocok dengan tombol HTML
+        window.togglePomodoroPiP = func_togglePomodoroPiP;
     </script>
 </body>
 </html>

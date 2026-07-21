@@ -3374,16 +3374,33 @@
                 modal.classList.add('hide');
             }, 300);
         }
+// Fungsi untuk memanggil asisten suara (Versi Lebih Natural)
         function playVoiceGreeting(name, onComplete) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                const text = `Halo ${name}! selamat belajar! semoga nilai ujianmu A semua!`;
+                
+                // Teks dimodifikasi dengan koma dan tanda seru agar intonasinya naik-turun
+                const text = `Halo, ${name}! Selamat belajar. Semoga, nilai ujianmu, A semua! Semangat!`;
                 const utterance = new SpeechSynthesisUtterance(text);
+                
                 utterance.lang = 'id-ID'; 
-                utterance.rate = 0.95; 
-                utterance.pitch = 1.1; 
+                // Kecepatan dicepatkan sedikit dan nada dinaikkan agar terkesan ceria
+                utterance.rate = 1.05; 
+                utterance.pitch = 1.3; 
+                
+                // Trik mencari suara "Google" atau suara yang lebih bagus di browser
+                const voices = window.speechSynthesis.getVoices();
+                const indoVoices = voices.filter(v => v.lang.includes('id') || v.lang.includes('ID'));
+                
+                if (indoVoices.length > 0) {
+                    // Prioritaskan suara buatan Google (karena paling natural)
+                    const premiumVoice = indoVoices.find(v => v.name.includes('Google') || v.name.includes('Online'));
+                    utterance.voice = premiumVoice ? premiumVoice : indoVoices[0];
+                }
+
                 utterance.onend = () => { if (onComplete) onComplete(); };
                 utterance.onerror = () => { if (onComplete) onComplete(); };
+                
                 window.speechSynthesis.speak(utterance);
             } else {
                 if (onComplete) onComplete();

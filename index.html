@@ -1025,8 +1025,11 @@
             <div class="space-y-3 text-gray-300 text-sm leading-relaxed mb-8">
                 <p>Halo Guys! Ada sedikit informasi nih:</p>
                 <ul class="list-disc pl-5 space-y-1 text-cyan-100">
-                    <li><strong>BANK KUIS:</strong> Jika berkenan, mohon untuk berbagi kuisnya untuk menjadi bahan persiapan UTS bersama ya! Tenang, tidak ada unsur paksaan kok! Makasih ya!</li>
-                </ul>
+
+                <li><strong>Audio Sambutan & Subtitle:</strong> Sapaan pembuka baru yang lebih hidup lengkap dengan teks subtitle melayang otomatis.</li>
+                <li><strong>Floating Pomodoro:</strong> Sekarang timer Pomodoro bisa dijadikan jendela mini melayang (Picture-in-Picture), jadi tetap kelihatan meskipun kamu pindah tab lain.</li>
+                <li><strong>Perbaikan Sistem:</strong> Peningkatan stabilitas tombol navigasi dan optimalisasi antarmuka.</li>
+                 
             </div>
             
             <button onclick="closeUpdateNote()" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all">
@@ -3355,7 +3358,7 @@
             return false;
         }
 // UPDATE VARIABEL INI setiap kali kamu mau memunculkan catatan baru
-        const CURRENT_APP_VERSION = "v1.2"; 
+        const CURRENT_APP_VERSION = "v1.4"; 
 
         function checkUpdateNote() {
             const lastSeenVersion = localStorage.getItem('4forasp_version_seen');

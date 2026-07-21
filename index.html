@@ -959,7 +959,7 @@
                         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-orange-400/25 bg-orange-500/10 text-orange-200 font-bold tracking-[0.18em] text-xs uppercase mb-5">
                             <i class="fas fa-bolt"></i> Orange Learning Studio
                         </div>
-                        <h3 class="text-3xl md:text-5xl font-heading font-extrabold leading-tight text-white">Sudah siap untuk <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-300 via-amber-300 to-yellow-200">pintas Orange?</span></h3>
+                        <h3 class="text-3xl md:text-5xl font-heading font-extrabold leading-tight text-white">Sudah siap untuk <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-300 via-amber-300 to-yellow-200">pintar Orange?</span></h3>
                         <p id="orange-launch-status" class="text-base md:text-lg text-gray-300 mt-4 leading-relaxed">Menyiapkan jalur tercepat menuju pembelajaran ADKSP yang lebih visual, runtut, dan minim kebingungan.</p>
                         <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
                             <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3"><span class="text-orange-200 font-semibold">1.</span> Pintas ke Orangeasy</div>
@@ -1008,7 +1008,31 @@
 
     <!-- Container Notifikasi Pop-up -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-[300] flex flex-col gap-3"></div>
+// UPDATE NOTIFIKASI
+    <div id="update-note-modal" class="fixed inset-0 z-[400] bg-[#030305]/90 backdrop-blur-md flex items-center justify-center hide opacity-0 transition-opacity duration-300">
+        <div class="glass-premium p-8 rounded-3xl max-w-lg w-full mx-4 border border-cyan-500/30 shadow-[0_0_40px_rgba(34,211,238,0.15)] relative transform scale-95 transition-transform duration-300" id="update-note-content">
+            
+            <div class="w-16 h-16 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center mb-5">
+                <i class="fas fa-bullhorn text-3xl text-cyan-400 text-glow"></i>
+            </div>
+            
+            <h3 class="text-2xl font-heading font-extrabold text-white mb-2">Pembaruan Sistem</h3>
+            <span class="inline-block px-3 py-1 bg-white/10 text-gray-300 rounded-full text-xs font-bold mb-5 border border-white/10" id="update-version-badge">Versi 1.1</span>
+            
+            <div class="space-y-3 text-gray-300 text-sm leading-relaxed mb-8">
+                <p>Halo Guys! Ada sedikit informasi nih:</p>
+                <ul class="list-disc pl-5 space-y-1 text-cyan-100">
+                    <li><strong>BANK KUIS:</strong> Jika berkenan, mohon untuk berbagi kuisnya untuk menjadi bahan persiapan UTS bersama ya! Tenang, tidak ada unsur paksaan kok! Makasih ya!</li>
+                </ul>
+            </div>
+            
+            <button onclick="closeUpdateNote()" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all">
+                Mengerti, Lanjutkan <i class="fas fa-check ml-2"></i>
+            </button>
+        </div>
+    </div>
 
+    
     <script src="learning-data.js"></script>
     <script>
         /* --- 1. Konfigurasi Sistem & Data Utama --- */
@@ -1382,9 +1406,15 @@
             unlockAudioEngine().then(isReady => {
                 if (isReady) playOriginalOpeningSound();
             });
-            // Musik sudah diprime saat tombol login diklik; naikkan volumenya perlahan setelah motif pembukaan.
-            setTimeout(() => resumeBackgroundMusic(1400), 650);
-
+            
+            // Tunggu 1.2 detik agar sound efek selesai, lalu jalankan suara robot
+            setTimeout(() => {
+                playVoiceGreeting(nameInput, () => {
+                    // Setelah suara robot selesai bicara, baru musik latar di-fade in
+                    resumeBackgroundMusic(1400);
+                });
+            }, 1200);
+            
             // Ledakan Cahaya
             const burst = document.getElementById('light-burst');
             burst.classList.add('explode');
@@ -1402,6 +1432,7 @@
                 setTimeout(() => {
                     document.getElementById('curtain-wrapper').style.display = 'none';
                     showToast("4forASP Online", `Selamat datang kembali, ${nameInput}!`);
+                    checkUpdateNote();
                 }, 1500);
             }, 200);
         }
@@ -1690,7 +1721,7 @@
             const phase = document.getElementById('orange-launch-phase');
             const status = document.getElementById('orange-launch-status');
             const steps = [
-                { until: 24, phase: 'Membuka pintasan', status: 'Sudah siap untuk pintas Orange? Kita akan menyalakan rute tercepat menuju workflow ADKSP.' },
+                { until: 24, phase: 'Membuka pintasan', status: 'Sudah siap untuk pintar Orange? Kita akan menyalakan rute tercepat menuju workflow ADKSP.' },
                 { until: 54, phase: 'Mengemas modul', status: 'Mengangkut glosarium, alur belajar, dan tampilan visual agar kamu masuk dengan konteks penuh.' },
                 { until: 82, phase: 'Mengunci fokus', status: 'Menghidupkan Orange Learning Studio... sebentar lagi kamu akan masuk ke ruang belajar yang lebih runtut dan praktis.' },
                 { until: 100, phase: 'Portal siap', status: `Semua siap. Selamat menjelajah ${siteName} dan semoga belajarnya makin lancar!` }
@@ -2104,16 +2135,23 @@
             }
         }
 
-        function playAlarm() {
-            try {
-                const synth = new Tone.PolySynth().toDestination();
-                const now = Tone.now();
-                synth.triggerAttackRelease(["C5", "E5", "G5"], "4n", now);
-                synth.triggerAttackRelease(["C5", "E5", "G5", "C6"], "2n", now + 0.5);
-            } catch (e) {
-                console.log("Audio not initialized");
-            }
-        }
+      function playAlarm() {
+    try {
+        const synth = new Tone.PolySynth().toDestination();
+        const now = Tone.now();
+        
+        // Ubah durasi chord pertama jadi "8n" agar selesai sebelum chord kedua masuk
+        synth.triggerAttackRelease(["C5", "E5", "G5"], "8n", now);
+        synth.triggerAttackRelease(["C5", "E5", "G5", "C6"], "2n", now + 0.5);
+        
+        // Hancurkan synth dari memori setelah 3 detik agar suara pasti berhenti total
+        setTimeout(() => {
+            try { synth.dispose(); } catch (_) {}
+        }, 3000); 
+    } catch (e) {
+        console.log("Audio not initialized");
+    }
+}
 
         /* --- 6. Sistem Belajar: Flashcard & Kuis Singkat --- */
         let currentFcList = [];
@@ -3297,7 +3335,60 @@
 
             return false;
         }
+// UPDATE VARIABEL INI setiap kali kamu mau memunculkan catatan baru
+        const CURRENT_APP_VERSION = "v1.2"; 
 
+        function checkUpdateNote() {
+            const lastSeenVersion = localStorage.getItem('4forasp_version_seen');
+            
+            // Jika versi yang tersimpan berbeda dengan versi saat ini (atau belum pernah lihat)
+            if (lastSeenVersion !== CURRENT_APP_VERSION) {
+                document.getElementById('update-version-badge').innerText = CURRENT_APP_VERSION;
+                const modal = document.getElementById('update-note-modal');
+                const content = document.getElementById('update-note-content');
+                
+                modal.classList.remove('hide');
+                
+                // Sedikit delay untuk memicu animasi masuk (fade in & scale up)
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    content.classList.remove('scale-95');
+                    content.classList.add('scale-100');
+                }, 50);
+            }
+        }
+
+        function closeUpdateNote() {
+            const modal = document.getElementById('update-note-modal');
+            const content = document.getElementById('update-note-content');
+            
+            // Animasi keluar
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            
+            // Simpan ke local storage agar tidak muncul lagi
+            localStorage.setItem('4forasp_version_seen', CURRENT_APP_VERSION);
+            
+            setTimeout(() => {
+                modal.classList.add('hide');
+            }, 300);
+        }
+        function playVoiceGreeting(name, onComplete) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const text = `Halo ${name}! selamat belajar! semoga nilai ujianmu A semua!`;
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'id-ID'; 
+                utterance.rate = 0.95; 
+                utterance.pitch = 1.1; 
+                utterance.onend = () => { if (onComplete) onComplete(); };
+                utterance.onerror = () => { if (onComplete) onComplete(); };
+                window.speechSynthesis.speak(utterance);
+            } else {
+                if (onComplete) onComplete();
+            }
+        }
     </script>
 </body>
 </html>

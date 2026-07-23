@@ -15,6 +15,8 @@
     <!-- Tone.js for Audio -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 
+    <script src="komneg-data.js"></script>
+    
     <style>
         /* --- Base & Typography --- */
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #030305; color: #fff; overflow-x: hidden; margin: 0; padding: 0; }
@@ -278,6 +280,10 @@
                     <i class="fas fa-gamepad text-xl w-6 text-center"></i>
                     <span class="hidden lg:block font-bold">Game Break</span>
                 </button>
+                <button onclick="switchTab('komneasy')" id="btn-tab-komneasy" class="nav-btn flex items-center gap-4 w-full p-4 rounded-2xl text-left hover:bg-white/5 text-gray-400 transition-colors">
+                    <i class="fas fa-comments text-xl w-6 text-center text-purple-400"></i>
+                    <span class="hidden lg:block font-bold">Komneasy</span>
+                </button>
             </nav>
         </aside>
 
@@ -301,7 +307,45 @@
                     </div>
                 </div>
             </div>
+ <!-- TAB: KOMNEASY SPECIAL FEATURE -->
+<div id="tab-komneasy" class="tab-content hide">
+    <div class="space-y-6">
+        <div class="glass-premium p-6 md:p-8 rounded-3xl border border-purple-500/30">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                <div>
+                    <span class="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-bold border border-purple-500/30">SPECIAL FEATURE</span>
+                    <h2 class="text-3xl font-heading font-extrabold text-white mt-2 text-glow">KOMNEASY Studio</h2>
+                    <p class="text-gray-400 text-sm">Pusat latihan modul persiapan Komunikasi & Negosiasi berbasis drill & paket latihan.</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="switchKomnegTab('modul')" id="btn-kmodul" class="px-5 py-2.5 rounded-xl bg-purple-600 text-white font-bold text-sm shadow-lg transition-all">Modul 5 Paket</button>
+                    <button onclick="switchKomnegTab('drill')" id="btn-kdrill" class="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 font-bold text-sm transition-all">Drill Bank Soal (125)</button>
+                </div>
+            </div>
 
+            <!-- SUB-TAB 1: MODUL 5 PAKET (A - E) -->
+            <div id="komneg-modul-section" class="space-y-4">
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button onclick="loadPaketModul('Paket A')" class="paket-btn px-4 py-2 rounded-xl bg-purple-500/25 border border-purple-400 text-purple-200 text-xs font-bold shadow-[0_0_10px_rgba(168,85,247,0.3)]">Paket A</button>
+                    <button onclick="loadPaketModul('Paket B')" class="paket-btn px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 text-xs font-bold hover:bg-white/10">Paket B</button>
+                    <button onclick="loadPaketModul('Paket C')" class="paket-btn px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 text-xs font-bold hover:bg-white/10">Paket C</button>
+                    <button onclick="loadPaketModul('Paket D')" class="paket-btn px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 text-xs font-bold hover:bg-white/10">Paket D</button>
+                    <button onclick="loadPaketModul('Paket E')" class="paket-btn px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 text-xs font-bold hover:bg-white/10">Paket E</button>
+                </div>
+                <div id="modul-content-container" class="space-y-4 max-h-[600px] overflow-y-auto pr-2"></div>
+            </div>
+
+            <!-- SUB-TAB 2: DRILL BANK SOAL (SCROLLABLE & HIDDEN ANSWER) -->
+            <div id="komneg-drill-section" class="space-y-6 hide">
+                <div class="flex justify-between items-center bg-black/40 p-4 rounded-2xl border border-white/10">
+                    <p class="text-sm text-gray-300 font-semibold"><i class="fas fa-bolt text-yellow-400 mr-2"></i>Mode Drill: Scroll ke bawah untuk melatih kecepatan analisis soal.</p>
+                    <span class="text-xs px-3 py-1 rounded bg-yellow-500/20 text-yellow-300 font-bold">125 Soal Tersedia</span>
+                </div>
+                <div id="drill-content-container" class="space-y-6 max-h-[650px] overflow-y-auto pr-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
             <!-- TAB: MATERI (Dinamis) -->
             <div id="tab-materi" class="tab-content active">
                 <div class="flex justify-between items-end mb-6">
@@ -1151,7 +1195,122 @@
 
         /* Audio harus dibuka langsung dari gesture klik agar tidak diblokir browser. */
         let audioUnlockPromise = null;
+function switchKomnegTab(target) {
+            if(target === 'modul') {
+                document.getElementById('komneg-modul-section').classList.remove('hide');
+                document.getElementById('komneg-drill-section').classList.add('hide');
+                document.getElementById('btn-kmodul').className = "px-5 py-2.5 rounded-xl bg-purple-600 text-white font-bold text-sm shadow-lg transition-all";
+                document.getElementById('btn-kdrill').className = "px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 font-bold text-sm transition-all";
+            } else {
+                document.getElementById('komneg-modul-section').classList.add('hide');
+                document.getElementById('komneg-drill-section').classList.remove('hide');
+                document.getElementById('btn-kdrill').className = "px-5 py-2.5 rounded-xl bg-yellow-500 text-black font-extrabold text-sm shadow-lg transition-all";
+                document.getElementById('btn-kmodul').className = "px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 font-bold text-sm transition-all";
+                loadDrillBankSoalOnce();
+            }
+        }
 
+        function loadPaketModul(paketName) {
+            document.querySelectorAll('.paket-btn').forEach(btn => {
+                const active = btn.innerText === paketName;
+                btn.className = active 
+                    ? "paket-btn px-4 py-2 rounded-xl bg-purple-500/25 border border-purple-400 text-purple-200 text-xs font-bold shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
+                    : "paket-btn px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 text-xs font-bold hover:bg-white/10";
+            });
+
+            const container = document.getElementById('modul-content-container');
+            const dataPaket = window.KOMNEG_DATA?.modul?.[paketName] || [];
+            
+            container.innerHTML = dataPaket.map((item, idx) => `
+                <div class="glass-premium p-5 rounded-2xl border border-white/10 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="px-2.5 py-1 rounded bg-purple-500/20 text-purple-300 text-xs font-bold">Soal No. ${item.No || (idx + 1)} (${item['Jenis Soal'] || 'PG'})</span>
+                        <span class="text-xs text-gray-400">${paketName}</span>
+                    </div>
+                    <p class="text-sm md:text-base font-semibold text-white leading-relaxed">${item.Pertanyaan}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2">
+                        ${['Opsi A', 'Opsi B', 'Opsi C', 'Opsi D', 'Opsi E'].map(opt => item[opt] && item[opt] !== '-' ? `
+                            <div class="p-2.5 rounded-xl bg-white/5 border border-white/5 text-xs text-gray-300 flex items-start gap-2">
+                                <span class="font-bold text-purple-300">${opt.slice(-1)}.</span>
+                                <span>${item[opt]}</span>
+                            </div>
+                        ` : '').join('')}
+                    </div>
+                    <div class="pt-3 border-t border-white/10">
+                        <button onclick="toggleModulAns('modul-ans-${paketName}-${idx}')" id="btn-modul-ans-${paketName}-${idx}" class="px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-bold transition-all">
+                            <i class="fas fa-eye mr-1"></i> Tampilkan Kunci & Pembahasan
+                        </button>
+                    </div>
+                    <div id="modul-ans-${paketName}-${idx}" class="hide p-4 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-xs space-y-2">
+                        <p class="font-bold text-cyan-300">Kunci Jawaban: <span class="text-white text-sm bg-cyan-600/40 px-2 py-0.5 rounded">${item['Kunci Jawaban']}</span></p>
+                        <p class="text-gray-300 leading-relaxed"><strong class="text-cyan-200">Pembahasan:</strong> ${item.Pembahasan || 'Tidak ada pembahasan khusus.'}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleModulAns(id) {
+            const box = document.getElementById(id);
+            const btn = document.getElementById('btn-' + id);
+            if(box.classList.contains('hide')) {
+                box.classList.remove('hide');
+                btn.innerHTML = '<i class="fas fa-eye-slash mr-1"></i> Sembunyikan Kunci';
+                btn.className = "px-3 py-1.5 rounded-lg bg-red-500/20 text-red-300 border border-red-500/30 text-xs font-bold transition-all";
+            } else {
+                box.classList.add('hide');
+                btn.innerHTML = '<i class="fas fa-eye mr-1"></i> Tampilkan Kunci & Pembahasan';
+                btn.className = "px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-bold transition-all";
+            }
+        }
+
+        let drillLoaded = false;
+        function loadDrillBankSoalOnce() {
+            if (drillLoaded) return;
+            drillLoaded = true;
+            const container = document.getElementById('drill-content-container');
+            const bankSoal = window.KOMNEG_DATA?.bankSoal || [];
+
+            container.innerHTML = bankSoal.map((item, idx) => `
+                <div class="glass-premium p-5 rounded-2xl border border-white/10 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="px-2.5 py-1 rounded bg-yellow-500/20 text-yellow-300 text-xs font-bold">Drill No. ${item.No || (idx + 1)} (${item['Jenis Soal'] || 'PG'})</span>
+                        <span class="text-xs text-gray-400">Bank Soal Komneg</span>
+                    </div>
+                    <p class="text-sm md:text-base font-semibold text-white leading-relaxed">${item.Pertanyaan}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2">
+                        ${['Pilihan A', 'Pilihan B', 'Pilihan C', 'Pilihan D'].map(opt => item[opt] && String(item[opt]).trim() !== '' ? `
+                            <div class="p-2.5 rounded-xl bg-white/5 border border-white/5 text-xs text-gray-300 flex items-start gap-2">
+                                <span class="font-bold text-yellow-300">${opt.slice(-1)}.</span>
+                                <span>${item[opt]}</span>
+                            </div>
+                        ` : '').join('')}
+                    </div>
+                    <div class="pt-3 border-t border-white/10">
+                        <button onclick="toggleAnswer('drill-ans-${idx}')" id="btn-drill-ans-${idx}" class="px-3 py-1.5 rounded-lg bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 text-xs font-bold transition-all">
+                            <i class="fas fa-eye mr-1"></i> Tampilkan Kunci Jawaban
+                        </button>
+                    </div>
+                    <div id="drill-ans-${idx}" class="hide p-4 rounded-xl bg-yellow-950/40 border border-yellow-500/30 text-xs space-y-1">
+                        <p class="font-bold text-yellow-300">Kunci Jawaban: <span class="text-white text-sm bg-yellow-600/40 px-2 py-0.5 rounded">${item['Jawaban/Kunci']}</span></p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleAnswer(id) {
+            const box = document.getElementById(id);
+            const btn = document.getElementById('btn-' + id);
+            if(box.classList.contains('hide')) {
+                box.classList.remove('hide');
+                btn.innerHTML = '<i class="fas fa-eye-slash mr-1"></i> Sembunyikan Kunci';
+                btn.className = "px-3 py-1.5 rounded-lg bg-red-500/20 text-red-300 border border-red-500/30 text-xs font-bold transition-all";
+            } else {
+                box.classList.add('hide');
+                btn.innerHTML = '<i class="fas fa-eye mr-1"></i> Tampilkan Kunci Jawaban';
+                btn.className = "px-3 py-1.5 rounded-lg bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 text-xs font-bold transition-all";
+            }
+        }
+        
         function unlockAudioEngine() {
             if (typeof Tone === 'undefined') return Promise.resolve(false);
 
@@ -1521,6 +1680,8 @@
 
             // Setup Particle Canvas (Gelembung Hover)
             setupCanvasParticles();
+            
+            loadPaketModul('Paket A');
         }
 
         let activeMaterialSourceId = null;

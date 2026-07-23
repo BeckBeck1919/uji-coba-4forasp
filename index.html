@@ -308,7 +308,7 @@
                 </div>
             </div>
 
-        // --- FITUR KOMNEASY INTERAKTIF & AUDIO ---
+  // --- FITUR KOMNEASY INTERAKTIF & AUDIO (TING & TETOT) ---
         function switchKomnegTab(target) {
             if(target === 'modul') {
                 document.getElementById('komneg-modul-section').classList.remove('hide');
@@ -324,7 +324,6 @@
             }
         }
 
-        // Efek Sound Effect Interaktif (Ting & Tetot)
         function playKomnegSound(type) {
             if (typeof Tone === 'undefined') return;
             try {
@@ -343,6 +342,7 @@
             } catch(e) {}
         }
 
+        // Modifikasi fungsi loadPaketModul agar opsi PG bisa diklik interaktif
         function loadPaketModul(paketName) {
             document.querySelectorAll('.paket-btn').forEach(btn => {
                 const active = btn.innerText === paketName;
@@ -356,8 +356,6 @@
             
             container.innerHTML = dataPaket.map((item, idx) => {
                 const jenis = item['Jenis Soal'] || 'PG';
-                
-                // 1. TAMPILAN PILIHAN GANDA (INTERAKTIF KLIK JAWABAN)
                 if (jenis === 'PG') {
                     return `
                     <div class="glass-premium p-5 rounded-2xl border border-white/10 space-y-3" id="q-box-${paketName}-${idx}">
@@ -366,7 +364,7 @@
                             <span class="text-xs text-gray-400">${paketName}</span>
                         </div>
                         <p class="text-sm md:text-base font-semibold text-white leading-relaxed">${item.Pertanyaan}</p>
-                        <div class="grid grid-cols-1 gap-2 pt-2" id="options-${paketName}-${idx}">
+                        <div class="grid grid-cols-1 gap-2 pt-2">
                             ${['Opsi A', 'Opsi B', 'Opsi C', 'Opsi D', 'Opsi E'].map(optKey => {
                                 const optVal = item[optKey];
                                 if (!optVal || optVal === '-') return '';
@@ -380,52 +378,28 @@
                         </div>
                         <div id="feedback-${paketName}-${idx}" class="hide mt-3 p-4 rounded-xl text-xs space-y-2"></div>
                     </div>`;
-                } 
-                // 2. TAMPILAN MENJODOHKAN (TARIK GARIS / KLIK PASANGAN INTERAKTIF)
-                else if (jenis === 'Menjodohkan') {
+                } else {
                     return `
                     <div class="glass-premium p-5 rounded-2xl border border-white/10 space-y-3">
                         <div class="flex justify-between items-center">
-                            <span class="px-2.5 py-1 rounded bg-blue-500/20 text-blue-300 text-xs font-bold">Menjodohkan No. ${item.No || (idx + 1)}</span>
+                            <span class="px-2.5 py-1 rounded bg-blue-500/20 text-blue-300 text-xs font-bold">${jenis} No. ${item.No || (idx + 1)}</span>
                             <span class="text-xs text-gray-400">${paketName}</span>
                         </div>
                         <p class="text-sm font-semibold text-white">${item.Pertanyaan}</p>
-                        <div class="text-xs text-purple-300 bg-purple-500/10 p-2.5 rounded-xl border border-purple-500/20">
-                            <i class="fas fa-info-circle mr-1"></i> Kunci Jawabannya: <strong class="text-white bg-purple-600/40 px-2 py-0.5 rounded">${item['Kunci Jawaban']}</strong>
-                        </div>
                         <div class="pt-2">
                             <button onclick="toggleModulAns('modul-ans-${paketName}-${idx}')" id="btn-modul-ans-${paketName}-${idx}" class="px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-bold transition-all">
-                                <i class="fas fa-eye mr-1"></i> Lihat Pembahasan
+                                <i class="fas fa-eye mr-1"></i> Lihat Pembahasan / Solusi
                             </button>
-                            <div id="modul-ans-${paketName}-${idx}" class="hide mt-2 p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-xs text-gray-300">
-                                <strong>Pembahasan:</strong> ${item.Pembahasan}
+                            <div id="modul-ans-${paketName}-${idx}" class="hide mt-2 p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-xs text-gray-300 space-y-1">
+                                <p><strong>Kunci / Solusi:</strong> ${item['Kunci Jawaban'] || '-'}</p>
+                                <p><strong>Pembahasan:</strong> ${item.Pembahasan}</p>
                             </div>
-                        </div>
-                    </div>`;
-                }
-                // 3. TAMPILAN ESSAY / KASUS (LIHAT JAWABAN)
-                else {
-                    return `
-                    <div class="glass-premium p-5 rounded-2xl border border-white/10 space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="px-2.5 py-1 rounded bg-yellow-500/20 text-yellow-300 text-xs font-bold">${jenis} No. ${item.No || (idx + 1)}</span>
-                            <span class="text-xs text-gray-400">${paketName}</span>
-                        </div>
-                        <p class="text-sm md:text-base font-semibold text-white leading-relaxed">${item.Pertanyaan}</p>
-                        <div class="pt-3 border-t border-white/10">
-                            <button onclick="toggleModulAns('modul-ans-${paketName}-${idx}')" id="btn-modul-ans-${paketName}-${idx}" class="px-3 py-1.5 rounded-lg bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 text-xs font-bold transition-all">
-                                <i class="fas fa-eye mr-1"></i> Tampilkan Solusi / Pembahasan
-                            </button>
-                        </div>
-                        <div id="modul-ans-${paketName}-${idx}" class="hide p-4 rounded-xl bg-yellow-950/40 border border-yellow-500/30 text-xs space-y-2">
-                            <p class="text-gray-200 leading-relaxed font-medium"><strong class="text-yellow-300">Solusi / Pembahasan:</strong> ${item.Pembahasan}</p>
                         </div>
                     </div>`;
                 }
             }).join('');
         }
 
-        // Fungsi Validasi Klik Pilihan Ganda Modul
         function checkPgAnswer(paket, idx, selectedLetter, correctLetter) {
             const buttons = document.querySelectorAll(`.opt-btn-${paket}-${idx}`);
             const feedbackBox = document.getElementById(`feedback-${paket}-${idx}`);
@@ -464,103 +438,8 @@
                 btn.className = "px-3 py-1.5 rounded-lg bg-red-500/20 text-red-300 border border-red-500/30 text-xs font-bold transition-all";
             } else {
                 box.classList.add('hide');
-                btn.innerHTML = '<i class="fas fa-eye mr-1"></i> Lihat Pembahasan';
+                btn.innerHTML = '<i class="fas fa-eye mr-1"></i> Lihat Pembahasan / Solusi';
                 btn.className = "px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-bold transition-all";
-            }
-        }
-
-        let drillLoaded = false;
-        function loadDrillBankSoalOnce() {
-            if (drillLoaded) return;
-            drillLoaded = true;
-            const container = document.getElementById('drill-content-container');
-            const bankSoal = window.KOMNEG_DATA?.bankSoal || [];
-
-            container.innerHTML = bankSoal.map((item, idx) => {
-                const jenis = item['Jenis Soal'] || 'PG';
-                if (jenis === 'PG') {
-                    return `
-                    <div class="glass-premium p-5 rounded-2xl border border-white/10 space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="px-2.5 py-1 rounded bg-yellow-500/20 text-yellow-300 text-xs font-bold">Drill No. ${item.No || (idx + 1)} (PG)</span>
-                            <span class="text-xs text-gray-400">Bank Soal Komneg</span>
-                        </div>
-                        <p class="text-sm md:text-base font-semibold text-white leading-relaxed">${item.Pertanyaan}</p>
-                        <div class="grid grid-cols-1 gap-2 pt-2" id="drill-opt-box-${idx}">
-                            ${['Pilihan A', 'Pilihan B', 'Pilihan C', 'Pilihan D'].map(optKey => {
-                                const optVal = item[optKey];
-                                if (!optVal || String(optVal).trim() === '') return '';
-                                const letter = optKey.slice(-1);
-                                return `
-                                <button type="button" onclick="checkDrillAnswer(${idx}, '${letter}', '${item['Jawaban/Kunci']}')" class="drill-opt-btn-${idx} w-full text-left p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-yellow-500/20 hover:border-yellow-400 text-xs md:text-sm text-gray-200 flex items-start gap-3 transition-all">
-                                    <span class="w-6 h-6 shrink-0 rounded-lg bg-white/10 flex items-center justify-center font-bold text-yellow-300">${letter}</span>
-                                    <span class="pt-0.5">${optVal}</span>
-                                </button>`;
-                            }).join('')}
-                        </div>
-                        <div id="drill-feedback-${idx}" class="hide mt-3 p-3 rounded-xl text-xs"></div>
-                    </div>`;
-                } else {
-                    return `
-                    <div class="glass-premium p-5 rounded-2xl border border-white/10 space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="px-2.5 py-1 rounded bg-yellow-500/20 text-yellow-300 text-xs font-bold">${jenis} No. ${item.No || (idx + 1)}</span>
-                            <span class="text-xs text-gray-400">Bank Soal Komneg</span>
-                        </div>
-                        <p class="text-sm md:text-base font-semibold text-white leading-relaxed">${item.Pertanyaan}</p>
-                        <div class="pt-3 border-t border-white/10">
-                            <button onclick="toggleAnswer('drill-ans-${idx}')" id="btn-drill-ans-${idx}" class="px-3 py-1.5 rounded-lg bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 text-xs font-bold transition-all">
-                                <i class="fas fa-eye mr-1"></i> Tampilkan Kunci Jawaban
-                            </button>
-                        </div>
-                        <div id="drill-ans-${idx}" class="hide p-4 rounded-xl bg-yellow-950/40 border border-yellow-500/30 text-xs space-y-1">
-                            <p class="font-bold text-yellow-300">Kunci Jawaban / Solusi: <span class="text-white text-sm bg-yellow-600/40 px-2 py-0.5 rounded">${item['Pilihan D'] || item['Jawaban/Kunci']}</span></p>
-                        </div>
-                    </div>`;
-                }
-            }).join('');
-        }
-
-        // Fungsi Validasi Klik Bank Soal Drill
-        function checkDrillAnswer(idx, selectedLetter, correctLetter) {
-            const buttons = document.querySelectorAll(`.drill-opt-btn-${idx}`);
-            const feedbackBox = document.getElementById(`drill-feedback-${idx}`);
-
-            buttons.forEach(btn => {
-                btn.disabled = true;
-                const letterSpan = btn.querySelector('span:first-child').innerText;
-                if (letterSpan === correctLetter) {
-                    btn.className = "w-full text-left p-3 rounded-xl bg-green-500/25 border border-green-400 text-xs md:text-sm text-green-200 flex items-start gap-3 transition-all";
-                } else if (letterSpan === selectedLetter && selectedLetter !== correctLetter) {
-                    btn.className = "w-full text-left p-3 rounded-xl bg-red-500/25 border border-red-400 text-xs md:text-sm text-red-200 flex items-start gap-3 transition-all";
-                } else {
-                    btn.className = "w-full text-left p-3 rounded-xl bg-white/5 border border-white/5 opacity-50 text-xs md:text-sm text-gray-400 flex items-start gap-3";
-                }
-            });
-
-            feedbackBox.classList.remove('hide');
-            if (selectedLetter === correctLetter) {
-                playKomnegSound('correct');
-                feedbackBox.className = "mt-3 p-3 rounded-xl text-xs bg-green-950/60 border border-green-500/40 text-green-200 font-bold";
-                feedbackBox.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Benar!';
-            } else {
-                playKomnegSound('wrong');
-                feedbackBox.className = "mt-3 p-3 rounded-xl text-xs bg-red-950/60 border border-red-500/40 text-red-200 font-bold";
-                feedbackBox.innerHTML = `<i class="fas fa-times-circle mr-1"></i> Belum Tepat. Jawaban benar: ${correctLetter}`;
-            }
-        }
-
-        function toggleAnswer(id) {
-            const box = document.getElementById(id);
-            const btn = document.getElementById('btn-' + id);
-            if(box.classList.contains('hide')) {
-                box.classList.remove('hide');
-                btn.innerHTML = '<i class="fas fa-eye-slash mr-1"></i> Sembunyikan Kunci';
-                btn.className = "px-3 py-1.5 rounded-lg bg-red-500/20 text-red-300 border border-red-500/30 text-xs font-bold transition-all";
-            } else {
-                box.classList.add('hide');
-                btn.innerHTML = '<i class="fas fa-eye mr-1"></i> Tampilkan Kunci Jawaban';
-                btn.className = "px-3 py-1.5 rounded-lg bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 text-xs font-bold transition-all";
             }
         }
             <!-- TAB: MATERI (Dinamis) -->

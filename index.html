@@ -667,6 +667,9 @@
 
                 <!-- Kontainer Canvas Game -->
                 <div id="game-container" class="hide relative w-full h-[400px] bg-[#050508] rounded-2xl border-2 border-white/10 overflow-hidden shadow-[inset_0_0_50px_rgba(0,0,0,0.8)]">
+                       <button onclick="backToGameMenu()" class="absolute top-3 left-3 z-20 px-3 py-1.5 rounded-xl bg-black/60 hover:bg-red-500/30 text-gray-300 hover:text-red-300 border border-white/10 text-xs font-bold transition-colors backdrop-blur-md flex items-center gap-1.5 shadow-lg">
+                        <i class="fas fa-arrow-left"></i> Menu Utama
+                    </button>
                     <canvas id="gameCanvas"></canvas>
                     
                     <!-- UI Audit Strike -->
@@ -1554,11 +1557,11 @@
         vercelToolbarObserver.observe(document.documentElement, { childList: true, subtree: true });
 
         /* --- 3. Navigasi & Utilitas --- */
-        function switchTab(tabId) {
+function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hide', 'opacity-0'));
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('bg-white/10', 'border', 'border-white/5', 'shadow-lg');
-                btn.classList.remove(btn.dataset.activeColor || 'text-cyan-300');
+                btn.classList.remove('text-cyan-300', 'text-green-400', 'text-purple-400', 'text-yellow-400', 'text-pink-400', 'text-blue-400', 'text-orange-400');
                 btn.classList.add('text-gray-400');
             });
 
@@ -1570,7 +1573,6 @@
             activeBtn.classList.add('bg-white/10', 'border', 'border-white/5', 'shadow-lg');
             activeBtn.classList.remove('text-gray-400');
             
-            // Penyesuaian warna indikator tab
             if(tabId === 'materi') activeBtn.classList.add('text-cyan-300');
             else if(tabId === 'jadwal') activeBtn.classList.add('text-green-400');
             else if(tabId === 'flashcard') activeBtn.classList.add('text-purple-400');
@@ -1581,14 +1583,18 @@
 
             if(tabId === 'soal') renderExamQuestions();
             activeTab = tabId;
+
+            // --- TAMBAHAN INI MENCEGAH LAYAR HITAM ---
+            quitGame(); // Hentikan dan bersihkan game saat pindah tab
+            backToGameMenu(); // Kembalikan tampilan menu game ke awal
+            // ----------------------------------------
+
             if (tabId === 'game') {
                 pauseBackgroundMusicForGame();
             } else {
-                quitGame(); // Hentikan game jika pindah tab
                 resumeBackgroundMusic(520);
             }
         }
-
         function showToast(title, message) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');

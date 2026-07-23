@@ -308,6 +308,20 @@
                 </div>
             </div>
 
+
+            <!-- TAB: MATERI (Dinamis) -->
+            <div id="tab-materi" class="tab-content active">
+                <div class="flex justify-between items-end mb-6">
+                    <h3 class="text-2xl font-heading font-bold flex items-center gap-2">
+                        <i class="fas fa-folder-open text-cyan-400"></i> Pilih Modul <span id="modul-count-title" class="text-lg text-gray-400 ml-2 font-normal"></span>
+                    </h3>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="modul-grid">
+                    <!-- Kartu-kartu akan di-generate oleh JS agar sesuai konsentrasi -->
+                </div>
+            </div>
+
   // --- FITUR KOMNEASY INTERAKTIF & AUDIO (TING & TETOT) ---
         function switchKomnegTab(target) {
             if(target === 'modul') {
@@ -442,19 +456,7 @@
                 btn.className = "px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-bold transition-all";
             }
         }
-            <!-- TAB: MATERI (Dinamis) -->
-            <div id="tab-materi" class="tab-content active">
-                <div class="flex justify-between items-end mb-6">
-                    <h3 class="text-2xl font-heading font-bold flex items-center gap-2">
-                        <i class="fas fa-folder-open text-cyan-400"></i> Pilih Modul <span id="modul-count-title" class="text-lg text-gray-400 ml-2 font-normal"></span>
-                    </h3>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="modul-grid">
-                    <!-- Kartu-kartu akan di-generate oleh JS agar sesuai konsentrasi -->
-                </div>
-            </div>
-
+            
             <!-- TAB: JADWAL UJIAN -->
             <div id="tab-jadwal" class="tab-content hide">
                 <div class="glass-premium rounded-3xl p-6 md:p-8">

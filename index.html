@@ -1011,24 +1011,25 @@
 
     <!-- Container Notifikasi Pop-up -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-[300] flex flex-col gap-3"></div>
-
-    <!-- Modal Catatan / Update (Popup Pertama Kali) -->
+// UPDATE NOTIFIKASI
     <div id="update-note-modal" class="fixed inset-0 z-[400] bg-[#030305]/90 backdrop-blur-md flex items-center justify-center hide opacity-0 transition-opacity duration-300">
         <div class="glass-premium p-8 rounded-3xl max-w-lg w-full mx-4 border border-cyan-500/30 shadow-[0_0_40px_rgba(34,211,238,0.15)] relative transform scale-95 transition-transform duration-300" id="update-note-content">
+            
             <div class="w-16 h-16 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center mb-5">
                 <i class="fas fa-bullhorn text-3xl text-cyan-400 text-glow"></i>
             </div>
             
             <h3 class="text-2xl font-heading font-extrabold text-white mb-2">Pembaruan Sistem</h3>
-            <span class="inline-block px-3 py-1 bg-white/10 text-gray-300 rounded-full text-xs font-bold mb-5 border border-white/10" id="update-version-badge">Versi 1.4</span>
+            <span class="inline-block px-3 py-1 bg-white/10 text-gray-300 rounded-full text-xs font-bold mb-5 border border-white/10" id="update-version-badge">Versi 1.1</span>
             
             <div class="space-y-3 text-gray-300 text-sm leading-relaxed mb-8">
                 <p>Halo Guys! Ada sedikit informasi nih:</p>
                 <ul class="list-disc pl-5 space-y-1 text-cyan-100">
-                    <li><strong>Audio Sambutan & Subtitle:</strong> Sapaan pembuka baru yang lebih hidup lengkap dengan teks subtitle melayang otomatis.</li>
-                    <li><strong>Floating Pomodoro:</strong> Sekarang timer Pomodoro bisa dijadikan jendela mini melayang (Picture-in-Picture), jadi tetap kelihatan meskipun kamu pindah tab lain.</li>
-                    <li><strong>Countdown Auto-Pilot:</strong> Hitung mundur jadwal ujian otomatis mengikuti waktu nyata berdasarkan data aslimu tanpa macet lagi.</li>
-                </ul>
+
+                <li><strong>Audio Sambutan & Subtitle:</strong> Sapaan pembuka baru yang lebih hidup lengkap dengan teks subtitle melayang otomatis.</li>
+                <li><strong>Floating Pomodoro:</strong> Sekarang timer Pomodoro bisa dijadikan jendela mini melayang (Picture-in-Picture), jadi tetap kelihatan meskipun kamu pindah tab lain.</li>
+                <li><strong>Perbaikan Sistem:</strong> Peningkatan stabilitas tombol navigasi dan optimalisasi antarmuka.</li>
+                 
             </div>
             
             <button onclick="closeUpdateNote()" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all">
@@ -1037,6 +1038,14 @@
         </div>
     </div>
 
+    <!-- Modal Catatan / Update (Popup Pertama Kali) -->
+    <div id="update-note-modal" class="fixed inset-0 z-[400] bg-[#030305]/90 backdrop-blur-md flex items-center justify-center hide opacity-0 transition-opacity duration-300">
+        <div class="glass-premium p-8 rounded-3xl max-w-lg w-full mx-4 border border-cyan-500/30 shadow-[0_0_40px_rgba(34,211,238,0.15)] relative transform scale-95 transition-transform duration-300" id="update-note-content">
+            <!-- (Isi dari modal updatemu ada di sini...) -->
+        </div>
+    </div>
+
+    <!-- ===== PASTE KODE SUBTITLE TEPAT DI SINI ===== -->
     <!-- Floating Subtitle untuk Audio Pembuka -->
     <div id="subtitle-container" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-[500] pointer-events-none transition-all duration-500 opacity-0 translate-y-4">
         <div class="glass-premium px-6 py-3 rounded-2xl border border-cyan-500/30 shadow-[0_0_20px_rgba(34,211,238,0.2)] text-center">
@@ -1070,7 +1079,7 @@
             { id: "gab-6", nama: "Kepemimpinan Sektor Publik", sks: 2, icon: "fa-crown", color: "yellow", desc: "Etika birokrasi dan gaya kepemimpinan.", konsen: ["gabungan"] }
         ];
 
-        // Bank soal ujian PDF.
+        // Bank soal ujian PDF. Semua berkas disimpan sejajar dengan index.html agar mudah dideploy ke Vercel.
         const examQuestionDB = [
             { id: "q-2021-akl2", title: "Akuntansi Keuangan Lanjutan II", year: 2021, pages: 5, file: "soal-2021-akuntansi-keuangan-lanjutan-2.pdf", konsen: ["gabungan"] },
             { id: "q-2021-sim", title: "Sistem Informasi Manajemen", year: 2021, pages: 1, file: "soal-2021-sistem-informasi-manajemen.pdf", konsen: ["gabungan"] },
@@ -1106,11 +1115,15 @@
             { id: 'ksp', title: 'Kepemimpinan Sektor Publik', category: 'Gabungan', preview: 'cheatsheet-ksp.webp', file: 'cheatsheet-ksp.pdf', pages: 15, konsen: ['gabungan'], accent: 'rose', action: 'preview', note: 'Nilai kepemimpinan, etika, birokrasi, dan dimensi sektor publik.' }
         ];
 
+        let currentCheatsheetItem = null;
+
         /* --- 2. Inisiasi Profil & Sistem --- */
+        // Event Listener untuk Tombol Pilihan Konsentrasi
         const KONSENTRASI_VALID = new Set(['audit', 'pppn', 'sisfo']);
 
         function selectKonsentrasi(value) {
             if (!KONSENTRASI_VALID.has(value)) return;
+
             globalKonsen = value;
             document.getElementById('user-konsen').value = value;
 
@@ -1132,35 +1145,47 @@
 
         setupGlobalUiClickSound();
 
+
+        /* Audio harus dibuka langsung dari gesture klik agar tidak diblokir browser. */
         let audioUnlockPromise = null;
+
         function unlockAudioEngine() {
             if (typeof Tone === 'undefined') return Promise.resolve(false);
+
             try {
                 Tone.Destination.mute = false;
                 Tone.Destination.volume.value = 0;
+
                 if (Tone.context.state === 'running') return Promise.resolve(true);
                 if (!audioUnlockPromise) {
                     audioUnlockPromise = Promise.resolve(Tone.start())
                         .then(() => true)
                         .catch(error => {
+                            console.warn('Audio belum dapat diaktifkan:', error);
                             audioUnlockPromise = null;
                             return false;
                         });
                 }
                 return audioUnlockPromise;
             } catch (error) {
+                console.warn('Audio engine tidak tersedia:', error);
                 return Promise.resolve(false);
             }
         }
 
         function playOriginalOpeningSound() {
             if (typeof Tone === 'undefined' || Tone.context.state !== 'running') return;
+
             try {
+                // Motif pembukaan asli: C5–E5–G5, klik digital, dan hentakan bass.
                 const now = Tone.now() + 0.03;
                 const fmSynth = new Tone.FMSynth({
-                    harmonicity: 2, modulationIndex: 3,
+                    harmonicity: 2,
+                    modulationIndex: 3,
                     oscillator: { type: 'sine' },
-                    envelope: { attack: 0.005, decay: 0.3, sustain: 0.12, release: 1 }
+                    envelope: { attack: 0.005, decay: 0.3, sustain: 0.12, release: 1 },
+                    modulation: { type: 'square' },
+                    modulationEnvelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.1 }
                 }).toDestination();
                 fmSynth.volume.value = -4;
 
@@ -1171,7 +1196,8 @@
                 noise.volume.value = -11;
 
                 const bass = new Tone.MembraneSynth({
-                    pitchDecay: 0.05, octaves: 6,
+                    pitchDecay: 0.05,
+                    octaves: 6,
                     oscillator: { type: 'sine' },
                     envelope: { attack: 0.001, decay: 0.42, sustain: 0.01, release: 0.8 }
                 }).toDestination();
@@ -1188,7 +1214,9 @@
                     try { noise.dispose(); } catch (_) {}
                     try { bass.dispose(); } catch (_) {}
                 }, 2600);
-            } catch (_) {}
+            } catch (error) {
+                console.warn('Sound pembukaan tidak dapat dimainkan:', error);
+            }
         }
 
         let uiClickSynth = null;
@@ -1214,8 +1242,11 @@
             lastUiClickTime = nowMs;
             try {
                 const synth = ensureUiClickSynth();
-                if (synth) synth.triggerAttackRelease('G5', '64n', Tone.now());
-            } catch (_) {}
+                if (!synth) return;
+                synth.triggerAttackRelease('G5', '64n', Tone.now());
+            } catch (error) {
+                console.warn('UI click sound gagal:', error);
+            }
         }
 
         function setupGlobalUiClickSound() {
@@ -1232,6 +1263,7 @@
 
         const backgroundMusic = document.getElementById('background-music');
         let backgroundMusicDesired = true;
+        let backgroundMusicPrimed = false;
         let backgroundMusicFadeTimer = null;
         const BACKGROUND_MUSIC_VOLUME = 0.26;
 
@@ -1276,18 +1308,30 @@
         function primeBackgroundMusicFromGesture() {
             if (!backgroundMusic || !backgroundMusicDesired) return;
             backgroundMusic.loop = true;
+            // Mulai dalam keadaan mute agar iOS/Android menerima play() dari gesture tanpa bunyi mendadak.
             backgroundMusic.muted = true;
             backgroundMusic.volume = 0;
             const playPromise = backgroundMusic.play();
             if (playPromise && typeof playPromise.then === 'function') {
-                playPromise.then(() => updateBackgroundMusicUI()).catch(() => updateBackgroundMusicUI());
+                playPromise.then(() => {
+                    backgroundMusicPrimed = true;
+                    updateBackgroundMusicUI();
+                }).catch(error => {
+                    console.warn('Musik latar belum dapat diputar otomatis:', error);
+                    updateBackgroundMusicUI();
+                });
+            } else {
+                backgroundMusicPrimed = true;
             }
         }
 
         function resumeBackgroundMusic(duration = 900) {
             if (!backgroundMusic || !backgroundMusicDesired || activeTab === 'game') return;
             backgroundMusic.muted = false;
-            backgroundMusic.play().catch(() => {});
+            const promise = backgroundMusic.play();
+            if (promise && typeof promise.catch === 'function') {
+                promise.catch(error => console.warn('Musik latar menunggu interaksi pengguna:', error));
+            }
             fadeBackgroundMusic(BACKGROUND_MUSIC_VOLUME, duration, false);
             updateBackgroundMusicUI();
         }
@@ -1316,8 +1360,19 @@
             setTimeout(() => resumeBackgroundMusic(420), 30);
         }
 
+        if (backgroundMusic) {
+            backgroundMusic.addEventListener('play', () => updateBackgroundMusicUI());
+            backgroundMusic.addEventListener('pause', () => updateBackgroundMusicUI(activeTab === 'game' ? 'game' : ''));
+            backgroundMusic.addEventListener('error', () => {
+                const subtext = document.getElementById('music-status-subtext');
+                if (subtext) subtext.innerText = 'File musik tidak dapat dimuat';
+            });
+        }
+
         function startLoadingSequence() {
+            // Dipanggil saat tombol diklik: inilah momen yang diizinkan browser untuk membuka audio.
             unlockAudioEngine();
+
             const nameInput = document.getElementById('user-name').value.trim() || 'Agen';
             const konsenInput = globalKonsen || document.getElementById('user-konsen').value;
 
@@ -1327,16 +1382,20 @@
             }
 
             globalKonsen = konsenInput;
+            // play() dipanggil langsung dari gesture login agar lolos kebijakan autoplay di Android/iOS.
             primeBackgroundMusicFromGesture();
 
+            // Sembunyikan layar awal (Fade out cepat)
             const welcomeScreen = document.getElementById('welcome-screen');
             welcomeScreen.style.opacity = '0';
             
+            // Tampilkan Wrapper Tirai dan Loading UI
             const curtainWrapper = document.getElementById('curtain-wrapper');
             curtainWrapper.classList.remove('hide');
             const loadingUI = document.getElementById('loading-ui');
             loadingUI.classList.add('show');
             
+            // Simulasi Proses Loading bar
             let progress = 0;
             const bar = document.getElementById('loading-bar');
             const text = document.getElementById('loading-text');
@@ -1355,34 +1414,42 @@
                     clearInterval(loadInt);
                     setTimeout(() => {
                         loadingUI.classList.remove('show');
+                        // Jalankan efek buka tirai
                         executeCurtainOpen(nameInput, konsenInput);
                         welcomeScreen.style.display = 'none';
                     }, 500);
                 }
-            }, 150);
+            }, 150); // Kecepatan loading
         }
 
         function executeCurtainOpen(nameInput, konsenInput) {
+            // Pastikan context tetap aktif setelah loading, lalu mainkan kembali sound pembukaan asli.
             unlockAudioEngine().then(isReady => {
                 if (isReady) playOriginalOpeningSound();
             });
             
+            // Tunggu 1.2 detik agar sound efek selesai, lalu jalankan MP3 ElevenLabs
             setTimeout(() => {
                 playElevenLabsAudio(() => {
+                    // Setelah audio selesai, baru musik latar di-fade in
                     resumeBackgroundMusic(1400);
                 });
             }, 1200);
             
+            // Ledakan Cahaya
             const burst = document.getElementById('light-burst');
             burst.classList.add('explode');
             
+            // Buka Tirai
             setTimeout(() => {
                 document.getElementById('curtain-left').classList.add('open');
                 document.getElementById('curtain-right').classList.add('open');
                 
+                // Mulai Inisialisasi Konten Web
                 initPortal(nameInput, konsenInput);
                 document.getElementById('main-app').classList.remove('hide');
                 
+                // Bersihkan tirai dari DOM setelah selesai
                 setTimeout(() => {
                     document.getElementById('curtain-wrapper').style.display = 'none';
                     showToast("4forASP Online", `Selamat datang kembali, ${nameInput}!`);
@@ -1395,15 +1462,16 @@
             document.getElementById('welcome-text').innerText = `Halo, ${nameInput}!`;
             document.getElementById('display-konsen').innerText = konsenInput === 'pppn' ? 'PPPN' : konsenInput.charAt(0).toUpperCase() + konsenInput.slice(1);
 
+            // 1. Filter Modul
             const filteredModul = mataKuliahDB.filter(m => m.konsen.includes('gabungan') || m.konsen.includes(konsenInput));
             const modulGrid = document.getElementById('modul-grid');
-            modulGrid.innerHTML = '';
+            modulGrid.innerHTML = ''; // Bersihkan
 
             filteredModul.forEach((m, idx) => {
-                const delay = idx * 100;
+                const delay = idx * 100; // Efek muncul bertahap
                 const card = `
                 <div role="button" tabindex="0" onclick="openMaterialSources('${m.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMaterialSources('${m.id}')}" class="material-card glass-premium rounded-2xl p-6 border-t border-l border-white/10 group cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-400/70" style="animation: fadeInUp 0.5s ease forwards ${delay}ms; opacity: 0; transform: translateY(20px);">
-                    <div class="w-14 h-14 rounded-2xl bg-${m.color}-500/20 flex items-center justify-center text-2xl text-${m.color}-400 mb-4 group-hover:scale-110 transition-transform">
+                    <div class="w-14 h-14 rounded-2xl bg-${m.color}-500/20 flex items-center justify-center text-2xl text-${m.color}-400 mb-4 group-hover:scale-110 transition-transform group-hover:shadow-[0_0_15px_rgba(currentColor,0.5)]">
                         <i class="fas ${m.icon}"></i>
                     </div>
                     <div class="flex justify-between items-start mb-2">
@@ -1419,26 +1487,44 @@
                 modulGrid.innerHTML += card;
             });
             
+            // 2. Update Teks Judul "(X Matkul)"
             document.getElementById('modul-count-title').innerText = `(${filteredModul.length} Matkul)`;
 
+            // 3. Render Tabel Jadwal
             renderJadwal(konsenInput);
-            
-            // JALANKAN COUNTDOWN & RADAR AUTO-PILOT BERDASARKAN JADWAL ASLImu
-            startCountdownAutoPilot();
-            updateRadarUjian(konsenInput);
 
+            // 4. Set Waktu Mundur & Radar Dinamis
+            if (konsenInput === 'sisfo') {
+                document.getElementById('cd-mata-kuliah').innerText = "Desain Pengendalian SIA";
+                document.getElementById('cd-tgl-ujian').innerText = "22 Jul, 13:30";
+                countDownDate = new Date("Jul 22, 2026 13:30:00").getTime();
+            } else {
+                document.getElementById('cd-mata-kuliah').innerText = "Praktikum Audit";
+                document.getElementById('cd-tgl-ujian').innerText = "22 Juli 2026";
+                countDownDate = new Date("Jul 22, 2026 08:00:00").getTime();
+            }
+            updateRadarUjian(konsenInput);
+            startCountdownAutoPilot();
+
+            // 5. Setup bank belajar lengkap (250 soal + 250 flashcard)
             setupLearningSelectors();
             loadFlashcards();
             resetQuizView();
+
+            // 6. Siapkan bank soal sesuai konsentrasi yang dipilih
             resetExamFilters();
             renderExamQuestions();
             renderCheatsheetCards();
+
+            // Setup Particle Canvas (Gelembung Hover)
             setupCanvasParticles();
         }
 
+        let activeMaterialSourceId = null;
         function openMaterialSources(moduleId) {
             const module = mataKuliahDB.find(item => item.id === moduleId);
             if (!module) return;
+            activeMaterialSourceId = moduleId;
             document.getElementById('material-source-title').innerText = module.nama;
             document.getElementById('material-source-modal').classList.remove('hide');
             document.body.style.overflow = 'hidden';
@@ -1464,12 +1550,15 @@
             selectors.forEach(selector => document.querySelectorAll(selector).forEach(node => node.remove()));
         }
         removeVercelToolbar();
+        const vercelToolbarObserver = new MutationObserver(removeVercelToolbar);
+        vercelToolbarObserver.observe(document.documentElement, { childList: true, subtree: true });
 
+        /* --- 3. Navigasi & Utilitas --- */
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hide', 'opacity-0'));
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('bg-white/10', 'border', 'border-white/5', 'shadow-lg');
-                btn.classList.remove('text-cyan-300', 'text-green-400', 'text-purple-400', 'text-yellow-400', 'text-pink-400', 'text-blue-400', 'text-orange-400');
+                btn.classList.remove(btn.dataset.activeColor || 'text-cyan-300');
                 btn.classList.add('text-gray-400');
             });
 
@@ -1481,6 +1570,7 @@
             activeBtn.classList.add('bg-white/10', 'border', 'border-white/5', 'shadow-lg');
             activeBtn.classList.remove('text-gray-400');
             
+            // Penyesuaian warna indikator tab
             if(tabId === 'materi') activeBtn.classList.add('text-cyan-300');
             else if(tabId === 'jadwal') activeBtn.classList.add('text-green-400');
             else if(tabId === 'flashcard') activeBtn.classList.add('text-purple-400');
@@ -1494,7 +1584,7 @@
             if (tabId === 'game') {
                 pauseBackgroundMusicForGame();
             } else {
-                quitGame();
+                quitGame(); // Hentikan game jika pindah tab
                 resumeBackgroundMusic(520);
             }
         }
@@ -1508,17 +1598,23 @@
                 <div class="text-xs text-gray-300">${message}</div>
             `;
             container.appendChild(toast);
+            
+            // Animasi masuk
             setTimeout(() => toast.classList.remove('translate-x-full'), 10);
+            
+            // Animasi keluar
             setTimeout(() => {
                 toast.classList.add('translate-x-full');
                 setTimeout(() => toast.remove(), 300);
             }, 4000);
         }
 
+        // Penambahan CSS animasi muncul
         document.head.insertAdjacentHTML("beforeend", `<style>
             @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
             .opacity-0 { opacity: 0; transition: opacity 0.3s ease; }
         </style>`);
+
 
         function getFilteredCheatsheets() {
             return cheatsheetDB.filter(item => item.konsen.includes('gabungan') || item.konsen.includes(globalKonsen));
@@ -1607,6 +1703,7 @@
                 showToast('Berkas belum tersedia', 'PDF cheatsheet untuk mata kuliah ini belum ditemukan.');
                 return;
             }
+            currentCheatsheetItem = item;
             document.getElementById('cheatsheet-viewer-title').innerText = item.title;
             document.getElementById('cheatsheet-viewer-meta').innerText = `${item.pages || '-'} halaman • ${item.note}`;
             const frame = document.getElementById('cheatsheet-frame');
@@ -1625,6 +1722,7 @@
             const loader = document.getElementById('cheatsheet-frame-loader');
             if (loader) loader.classList.add('hide');
         }
+        
 
         function closeCheatsheetViewer() {
             document.getElementById('cheatsheet-viewer-modal').classList.add('hide');
@@ -1654,6 +1752,22 @@
             overlay.classList.remove('hide');
             setTimeout(() => overlay.classList.remove('opacity-0'), 20);
 
+            try {
+                unlockAudioEngine().then(ok => {
+                    if (!ok || typeof Tone === 'undefined') return;
+                    const synth = new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: 'triangle' },
+                        envelope: { attack: 0.08, decay: 0.2, sustain: 0.15, release: 0.6 }
+                    }).toDestination();
+                    synth.volume.value = -18;
+                    const now = Tone.now() + 0.05;
+                    synth.triggerAttackRelease(['C4', 'E4', 'G4'], '8n', now);
+                    synth.triggerAttackRelease(['D4', 'F4', 'A4'], '8n', now + 0.28);
+                    synth.triggerAttackRelease(['E4', 'G4', 'B4'], '4n', now + 0.56);
+                    setTimeout(() => { try { synth.dispose(); } catch (_) {} }, 1800);
+                });
+            } catch (_) {}
+
             let progress = 0;
             if (orangeLaunchTimer) clearInterval(orangeLaunchTimer);
             bar.style.width = '0%';
@@ -1681,6 +1795,14 @@
                 }
             }, 260);
         }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                if (!document.getElementById('material-source-modal').classList.contains('hide')) closeMaterialSources();
+                if (!document.getElementById('cheatsheet-viewer-modal').classList.contains('hide')) closeCheatsheetViewer();
+                if (!document.getElementById('exam-viewer-modal').classList.contains('hide')) closeExamViewer();
+            }
+        });
 
         /* --- 4. Bank Soal Ujian & PDF Viewer --- */
         function resetExamFilters() {
@@ -1773,7 +1895,10 @@
 
         function openExamViewer(id) {
             const item = examQuestionDB.find(entry => entry.id === id);
-            if (!item) return;
+            if (!item) {
+                showToast('Berkas tidak ditemukan', 'Data soal ujian tidak tersedia.');
+                return;
+            }
 
             const modal = document.getElementById('exam-viewer-modal');
             const frame = document.getElementById('exam-frame');
@@ -1812,8 +1937,14 @@
             if (event.target.id === 'exam-viewer-modal') closeExamViewer();
         }
 
-        /* --- 5. Jadwal Ujian & Radar Auto-Pilot (Real-Time Berdasarkan Jadwal Asli) --- */
-        const jadwalMentah = [
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && !document.getElementById('exam-viewer-modal')?.classList.contains('hide')) {
+                closeExamViewer();
+            }
+        });
+
+        /* --- 5. Jadwal Ujian & Radar Real-time --- */
+       const jadwalMentah = [
             { tgl: "22 Juli 2026, 08:00", target: new Date("Jul 22, 2026 08:00:00").getTime(), matkul: "Praktikum Audit", prog: "Audit, PPPN", sifat: "Close Book", color: "purple" },
             { tgl: "22 Juli 2026, 13:30", target: new Date("Jul 22, 2026 13:30:00").getTime(), matkul: "Desain Pengendalian SIA", prog: "Sisfo", sifat: "Close Book", color: "purple" },
             { tgl: "23 Juli 2026, 08:00", target: new Date("Jul 23, 2026 08:00:00").getTime(), matkul: "Akuntansi Keuangan Lanjutan II", prog: "Semua Prodi", sifat: "Close Book", color: "cyan" },
@@ -1826,11 +1957,12 @@
             { tgl: "31 Juli 2026, 13:30", target: new Date("Jul 31, 2026 13:30:00").getTime(), matkul: "Proses Bisnis Penerimaan N.", prog: "PPPN", sifat: "Close Book", color: "yellow" },
             { tgl: "03 Agustus 2026, 13:30", target: new Date("Aug 3, 2026 13:30:00").getTime(), matkul: "Manajemen Proyek SIA", prog: "Sisfo", sifat: "Close Book", color: "cyan" }
         ];
-
+        
         function renderJadwal(konsen) {
             const tbody = document.getElementById('jadwal-tbody');
             tbody.innerHTML = '';
             
+            // Filter jadwal
             let myJadwal = jadwalMentah.filter(j => 
                 j.prog === "Semua Prodi" || j.prog.toLowerCase().includes(konsen)
             );
@@ -1853,49 +1985,11 @@
             });
         }
 
-        // AUTO-PILOT COUNTDOWN BERDASARKAN JADWAL ASLI
-        function startCountdownAutoPilot() {
-            clearInterval(countdownInterval);
-
-            // Filter jadwal ujian yang relevan dengan prodi pilihan atau semua prodi
-            const sekarang = new Date().getTime();
-            let ujianRelevan = jadwalMentah.filter(item => 
-                item.prog === "Semua Prodi" || item.prog.toLowerCase().includes(globalKonsen)
-            );
-
-            // Cari ujian berikutnya yang belum lewat
-            let ujianAktif = ujianRelevan.find(item => item.target > sekarang);
-            if (!ujianAktif) ujianAktif = jadwalMentah[jadwalMentah.length - 1];
-
-            document.getElementById('cd-mata-kuliah').innerText = ujianAktif.matkul;
-            document.getElementById('cd-tgl-ujian').innerText = ujianAktif.tgl;
-            countDownDate = ujianAktif.target;
-
-            countdownInterval = setInterval(() => {
-                const now = new Date().getTime();
-                const distance = countDownDate - now;
-
-                if (distance < 0) {
-                    document.getElementById("cd-hari").innerText = "00";
-                    document.getElementById("cd-jam").innerText = "00";
-                    document.getElementById("cd-mnt").innerText = "00";
-                    document.getElementById("cd-dtk").innerText = "00";
-                    return;
-                }
-
-                document.getElementById("cd-hari").innerText = Math.floor(distance / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
-                document.getElementById("cd-jam").innerText = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
-                document.getElementById("cd-mnt").innerText = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
-                document.getElementById("cd-dtk").innerText = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
-            }, 1000);
-        }
-
-        // RADAR UJIAN AUTO-PILOT REAL-TIME
+// --- RADAR UJIAN AUTO-PILOT REAL-TIME ---
         function updateRadarUjian(konsentrasi) {
-            const now = new Date(); // Menggunakan waktu asli real-time sistem komputer
+            const now = new Date(); 
             const radarContainer = document.getElementById('radar-container');
             
-            // Konversi jadwal asli ke format tanggal Date object untuk radar
             const agenda = jadwalMentah.map(j => ({
                 tgl: new Date(j.target),
                 matkul: j.matkul,
@@ -1938,7 +2032,40 @@
             }
         }
 
-        /* --- 6. Pomodoro Timer --- */
+function startCountdownAutoPilot() {
+            clearInterval(countdownInterval);
+
+            const sekarang = new Date().getTime();
+            let ujianRelevan = jadwalMentah.filter(item => 
+                item.prog === "Semua Prodi" || item.prog.toLowerCase().includes(globalKonsen)
+            );
+
+            let ujianAktif = ujianRelevan.find(item => item.target > sekarang);
+            if (!ujianAktif) ujianAktif = jadwalMentah[jadwalMentah.length - 1];
+
+            document.getElementById('cd-mata-kuliah').innerText = ujianAktif.matkul;
+            document.getElementById('cd-tgl-ujian').innerText = ujianAktif.tgl;
+            countDownDate = ujianAktif.target;
+
+            countdownInterval = setInterval(() => {
+                const now = new Date().getTime();
+                const distance = countDownDate - now;
+
+                if (distance < 0) {
+                    document.getElementById("cd-hari").innerText = "00";
+                    document.getElementById("cd-jam").innerText = "00";
+                    document.getElementById("cd-mnt").innerText = "00";
+                    document.getElementById("cd-dtk").innerText = "00";
+                    return;
+                }
+
+                document.getElementById("cd-hari").innerText = Math.floor(distance / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
+                document.getElementById("cd-jam").innerText = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+                document.getElementById("cd-mnt").innerText = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+                document.getElementById("cd-dtk").innerText = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
+            }, 1000);
+        }
+        /* --- 5. Pomodoro Timer --- */
         let pomoInterval;
         let pomoTimeLeft = 25 * 60;
         let isPomoRunning = false;
@@ -1958,13 +2085,15 @@
             const text = document.getElementById('pomo-text');
 
             if (isPomoRunning) {
+                // Pause
                 clearInterval(pomoInterval);
                 isPomoRunning = false;
                 text.innerText = "Lanjut";
                 icon.className = "fas fa-play";
                 btn.className = "flex-1 py-3 rounded-xl bg-white/10 font-bold hover:bg-white/20 transition-all";
             } else {
-                Tone.start();
+                // Play
+                Tone.start(); // Wajib untuk mengaktifkan audio engine di browser
                 isPomoRunning = true;
                 text.innerText = "Jeda";
                 icon.className = "fas fa-pause";
@@ -2037,17 +2166,25 @@
             }
         }
 
-        function playAlarm() {
-            try {
-                const synth = new Tone.PolySynth().toDestination();
-                const now = Tone.now();
-                synth.triggerAttackRelease(["C5", "E5", "G5"], "8n", now);
-                synth.triggerAttackRelease(["C5", "E5", "G5", "C6"], "2n", now + 0.5);
-                setTimeout(() => { try { synth.dispose(); } catch (_) {} }, 3000); 
-            } catch (_) {}
-        }
+      function playAlarm() {
+    try {
+        const synth = new Tone.PolySynth().toDestination();
+        const now = Tone.now();
+        
+        // Ubah durasi chord pertama jadi "8n" agar selesai sebelum chord kedua masuk
+        synth.triggerAttackRelease(["C5", "E5", "G5"], "8n", now);
+        synth.triggerAttackRelease(["C5", "E5", "G5", "C6"], "2n", now + 0.5);
+        
+        // Hancurkan synth dari memori setelah 3 detik agar suara pasti berhenti total
+        setTimeout(() => {
+            try { synth.dispose(); } catch (_) {}
+        }, 3000); 
+    } catch (e) {
+        console.log("Audio not initialized");
+    }
+}
 
-        /* --- 7. Sistem Belajar: Flashcard & Kuis Singkat --- */
+        /* --- 6. Sistem Belajar: Flashcard & Kuis Singkat --- */
         let currentFcList = [];
         let currentFcIndex = 0;
         let fcDetailsUnlocked = false;
@@ -2280,6 +2417,15 @@
             const nextBtn = document.getElementById('quiz-next-btn');
             nextBtn.disabled = false;
             nextBtn.className = 'px-6 py-3 rounded-xl bg-gradient-to-r from-yellow-400 to-orange-400 text-black border border-yellow-300/30 font-extrabold hover:scale-[1.02] transition-all';
+
+            try {
+                if (typeof Tone !== 'undefined' && Tone.context.state === 'running') {
+                    const synth = new Tone.Synth({oscillator:{type:'triangle'}, envelope:{attack:0.005,decay:0.1,sustain:0,release:0.1}}).toDestination();
+                    synth.volume.value = -16;
+                    synth.triggerAttackRelease(isCorrect ? 'E5' : 'C3', '16n');
+                    setTimeout(() => { try { synth.dispose(); } catch (_) {} }, 500);
+                }
+            } catch (_) {}
         }
 
         function nextQuizQuestion() {
@@ -2310,7 +2456,7 @@
             }
         }
 
-        /* --- 8. Efek Partikel Gravitasi Kursor --- */
+        /* --- 7. Efek Partikel Gravitasi Kursor --- */
         function setupCanvasParticles() {
             const canvas = document.getElementById('particle-canvas');
             const ctx = canvas.getContext('2d');
@@ -2325,8 +2471,8 @@
                     this.x = x; this.y = y;
                     this.size = Math.random() * 8 + 3;
                     this.speedX = (Math.random() - 0.5) * 5;
-                    this.speedY = Math.random() * -3 - 2;
-                    this.gravity = 0.15;
+                    this.speedY = Math.random() * -3 - 2; // Lompat ke atas
+                    this.gravity = 0.15; // Efek jatuh
                     this.color = colors[Math.floor(Math.random() * colors.length)];
                     this.opacity = 1;
                 }
@@ -2370,7 +2516,7 @@
             animateParticles();
         }
 
-        /* --- 9. Mini-Games System --- */
+        /* --- 8. Mini-Games System --- */
         let currentGame = null;
         let gameTimer = null;
         let gameScore = 0;
@@ -2389,6 +2535,10 @@
             gCanvas.height = Math.max(300, Math.round(container.clientHeight));
         }
 
+        window.addEventListener('resize', () => {
+            if (!document.getElementById('game-container').classList.contains('hide')) resizeGameCanvas();
+        });
+
         function registerGameAudio(node) {
             gameAudioNodes.add(node);
             return node;
@@ -2406,16 +2556,24 @@
         function clearGameEngine() {
             isGameRunning = false;
             gameSessionId += 1;
+
             if (gameTimer) clearInterval(gameTimer);
             gameTimer = null;
+
             gameTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
             gameTimeouts.clear();
+
             if (gameRafId) cancelAnimationFrame(gameRafId);
             gameRafId = null;
+
             gCanvas.onclick = null;
             gCanvas.onpointerdown = null;
-            gameAudioNodes.forEach(node => { try { node.dispose(); } catch (_) {} });
+
+            gameAudioNodes.forEach(node => {
+                try { node.dispose(); } catch (_) {}
+            });
             gameAudioNodes.clear();
+
             gCtx.clearRect(0, 0, gCanvas.width, gCanvas.height);
         }
 
@@ -2468,6 +2626,7 @@
         function finishGame(titleText, descriptionText) {
             clearGameEngine();
             document.getElementById('audit-ui').classList.add('hide');
+
             const overlay = document.getElementById('game-overlay');
             const title = document.getElementById('game-title');
             const desc = document.getElementById('game-desc');
@@ -2496,6 +2655,7 @@
             else if (type === 'audit') runAuditStrike(gameSessionId);
         }
 
+        // --- GAME 1: Neon Balloon Melody ---
         function runNeonPop(session) {
             const scoreDisplay = document.getElementById('game-score-display');
             const scoreText = document.getElementById('current-score');
@@ -2509,10 +2669,21 @@
             const colors = ['#22d3ee', '#a855f7', '#ec4899', '#f59e0b', '#34d399', '#60a5fa', '#fb7185'];
             const melody = [
                 ['C5','8n'], ['C5','8n'], ['G5','8n'], ['G5','8n'], ['A5','8n'], ['A5','8n'], ['G5','4n'],
+                ['F5','8n'], ['F5','8n'], ['E5','8n'], ['E5','8n'], ['D5','8n'], ['D5','8n'], ['C5','4n'],
+                ['G5','8n'], ['G5','8n'], ['F5','8n'], ['F5','8n'], ['E5','8n'], ['E5','8n'], ['D5','4n'],
+                ['G5','8n'], ['G5','8n'], ['F5','8n'], ['F5','8n'], ['E5','8n'], ['E5','8n'], ['D5','4n'],
+                ['C5','8n'], ['C5','8n'], ['G5','8n'], ['G5','8n'], ['A5','8n'], ['A5','8n'], ['G5','4n'],
                 ['F5','8n'], ['F5','8n'], ['E5','8n'], ['E5','8n'], ['D5','8n'], ['D5','8n'], ['C5','4n']
             ];
 
-            const melodySynth = registerGameAudio(new Tone.FMSynth().toDestination());
+            const melodySynth = registerGameAudio(new Tone.FMSynth({
+                harmonicity: 3.01,
+                modulationIndex: 9,
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.004, decay: 0.32, sustain: 0.08, release: 0.75 },
+                modulation: { type: 'triangle' },
+                modulationEnvelope: { attack: 0.005, decay: 0.18, sustain: 0.05, release: 0.45 }
+            }).toDestination());
             melodySynth.volume.value = -7;
 
             function updateScore() {
@@ -2527,7 +2698,8 @@
                     baseX: radiusX + Math.random() * Math.max(1, gCanvas.width - radiusX * 2),
                     x: 0,
                     y: initial ? Math.random() * gCanvas.height : gCanvas.height + radiusY + 25,
-                    rx: radiusX, ry: radiusY,
+                    rx: radiusX,
+                    ry: radiusY,
                     speed: 0.65 + Math.random() * 1.05,
                     sway: 12 + Math.random() * 24,
                     swaySpeed: 0.0012 + Math.random() * 0.0015,
@@ -2549,7 +2721,7 @@
                 if (!isGameRunning || session !== gameSessionId) return;
                 time -= 1;
                 if (time <= 0) {
-                    finishGame('Melodi Selesai!', `Skor akhir ${gameScore}. Kamu memainkan ${playedNotes} nada.`);
+                    finishGame('Melodi Selesai!', `Skor akhir ${gameScore}. Kamu memainkan ${playedNotes} nada Twinkle Twinkle Little Star.`);
                 }
             }, 1000);
 
@@ -2559,22 +2731,78 @@
 
                 gCtx.save();
                 gCtx.translate(x, y);
+                gCtx.rotate(Math.sin(now * 0.001 + balloon.phase) * 0.05);
+
                 const fill = gCtx.createRadialGradient(-rx * 0.35, -ry * 0.42, 2, 0, 0, ry * 1.05);
                 fill.addColorStop(0, '#ffffff');
                 fill.addColorStop(0.16, color);
                 fill.addColorStop(1, color + '88');
 
+                gCtx.shadowBlur = 18;
+                gCtx.shadowColor = color;
                 gCtx.fillStyle = fill;
                 gCtx.beginPath();
                 gCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
                 gCtx.fill();
+                gCtx.lineWidth = 2;
+                gCtx.strokeStyle = '#ffffffaa';
+                gCtx.stroke();
+
+                // Kilau balon.
+                gCtx.shadowBlur = 0;
+                gCtx.fillStyle = '#ffffff99';
+                gCtx.beginPath();
+                gCtx.ellipse(-rx * 0.35, -ry * 0.36, rx * 0.16, ry * 0.25, -0.35, 0, Math.PI * 2);
+                gCtx.fill();
+
+                // Simpul dan tali melengkung.
+                gCtx.fillStyle = color;
+                gCtx.beginPath();
+                gCtx.moveTo(-6, ry - 1);
+                gCtx.lineTo(6, ry - 1);
+                gCtx.lineTo(0, ry + 10);
+                gCtx.closePath();
+                gCtx.fill();
+                gCtx.strokeStyle = '#ffffff99';
+                gCtx.lineWidth = 1.5;
+                gCtx.beginPath();
+                gCtx.moveTo(0, ry + 9);
+                gCtx.bezierCurveTo(-8, ry + 24, 9, ry + 38, 0, ry + 58);
+                gCtx.stroke();
                 gCtx.restore();
+            }
+
+            function drawPopEffects() {
+                for (let i = popEffects.length - 1; i >= 0; i--) {
+                    const effect = popEffects[i];
+                    effect.life -= 1;
+                    effect.y -= 0.7;
+                    const alpha = Math.max(0, effect.life / 34);
+                    gCtx.save();
+                    gCtx.globalAlpha = alpha;
+                    gCtx.fillStyle = effect.color;
+                    gCtx.font = 'bold 25px Arial';
+                    gCtx.fillText('♪', effect.x - 8, effect.y);
+                    for (let p = 0; p < 8; p++) {
+                        const angle = (Math.PI * 2 * p) / 8;
+                        const dist = (34 - effect.life) * 1.35;
+                        gCtx.beginPath();
+                        gCtx.arc(effect.x + Math.cos(angle) * dist, effect.y + Math.sin(angle) * dist, 2.4, 0, Math.PI * 2);
+                        gCtx.fill();
+                    }
+                    gCtx.restore();
+                    if (effect.life <= 0) popEffects.splice(i, 1);
+                }
             }
 
             function loop(now = performance.now()) {
                 if (!isGameRunning || session !== gameSessionId) return;
                 gCtx.clearRect(0, 0, gCanvas.width, gCanvas.height);
-                gCtx.fillStyle = '#071426';
+
+                const bg = gCtx.createLinearGradient(0, 0, 0, gCanvas.height);
+                bg.addColorStop(0, '#071426');
+                bg.addColorStop(1, '#090414');
+                gCtx.fillStyle = bg;
                 gCtx.fillRect(0, 0, gCanvas.width, gCanvas.height);
 
                 for (let i = balloons.length - 1; i >= 0; i--) {
@@ -2583,10 +2811,17 @@
                     drawBalloon(balloon, now);
                     if (balloon.y + balloon.ry + 60 < 0) balloons.splice(i, 1);
                 }
+                drawPopEffects();
 
+                gCtx.shadowBlur = 0;
                 gCtx.fillStyle = '#ffffff';
                 gCtx.font = 'bold 18px "Courier New"';
                 gCtx.fillText(`Waktu: ${time}s`, 18, 28);
+                gCtx.textAlign = 'right';
+                gCtx.fillStyle = '#67e8f9';
+                gCtx.fillText(`Twinkle ${melodyIndex + 1}/${melody.length}`, gCanvas.width - 18, 28);
+                gCtx.textAlign = 'left';
+
                 gameRafId = requestAnimationFrame(loop);
             }
             loop();
@@ -2605,6 +2840,7 @@
                     if (dx * dx + dy * dy <= 1) {
                         const [note, duration] = melody[melodyIndex];
                         try { melodySynth.triggerAttackRelease(note, duration); } catch (_) {}
+                        popEffects.push({ x: balloon.x, y: balloon.y, color: balloon.color, life: 34 });
                         balloons.splice(i, 1);
                         gameScore += 10;
                         melodyIndex = (melodyIndex + 1) % melody.length;
@@ -2616,6 +2852,7 @@
             };
         }
 
+        // --- GAME 2: Cyber Memory 3×3 ---
         function runCyberMemory(session) {
             const scoreDisplay = document.getElementById('game-score-display');
             const scoreText = document.getElementById('current-score');
@@ -2623,18 +2860,32 @@
 
             const padColors = ['#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#0ea5e9','#6366f1','#a855f7','#ec4899'];
             const notes = ['C4','D4','E4','F4','G4','A4','B4','C5','D5'];
-            const synth = registerGameAudio(new Tone.Synth().toDestination());
+            const synth = registerGameAudio(new Tone.Synth({
+                oscillator: { type: 'triangle' },
+                envelope: { attack: 0.005, decay: 0.16, sustain: 0.2, release: 0.35 }
+            }).toDestination());
             synth.volume.value = -8;
 
-            let sequence = [0, 1, 2];
+            let sequence = [];
             let playerIndex = 0;
             let showingSequence = true;
             let activePad = -1;
+            let wrongPad = -1;
             let level = 1;
+            let statusText = 'Perhatikan polanya...';
+
+            function randomPad() {
+                let next = Math.floor(Math.random() * 9);
+                if (sequence.length > 0 && next === sequence[sequence.length - 1]) next = (next + 1 + Math.floor(Math.random() * 8)) % 9;
+                return next;
+            }
+
+            // Level pertama langsung memakai tiga langkah agar papan 3×3 terasa menantang.
+            sequence = [randomPad(), randomPad(), randomPad()];
 
             function getGrid() {
                 const top = 58;
-                const gap = 10;
+                const gap = Math.max(7, Math.min(12, gCanvas.width * 0.018));
                 const cellW = (gCanvas.width - gap * 4) / 3;
                 const cellH = (gCanvas.height - top - gap * 4) / 3;
                 return { top, gap, cellW, cellH };
@@ -2646,21 +2897,136 @@
                 gCtx.fillStyle = '#050812';
                 gCtx.fillRect(0, 0, gCanvas.width, gCanvas.height);
 
+                gCtx.font = 'bold 16px "Courier New"';
+                gCtx.fillStyle = showingSequence ? '#c4b5fd' : '#67e8f9';
+                gCtx.fillText(statusText, 16, 26);
+                gCtx.textAlign = 'right';
+                gCtx.fillStyle = '#ffffff';
+                gCtx.fillText(`Level ${level} • ${sequence.length} langkah`, gCanvas.width - 16, 26);
+                gCtx.textAlign = 'left';
+
                 for (let i = 0; i < 9; i++) {
                     const col = i % 3;
                     const row = Math.floor(i / 3);
                     const x = gap + col * (cellW + gap);
                     const y = top + gap + row * (cellH + gap);
                     const isActive = activePad === i;
+                    const isWrong = wrongPad === i;
 
-                    gCtx.fillStyle = isActive ? padColors[i] : padColors[i] + '4d';
-                    gCtx.fillRect(x, y, cellW, cellH);
+                    gCtx.save();
+                    gCtx.shadowBlur = isActive || isWrong ? 28 : 8;
+                    gCtx.shadowColor = isWrong ? '#ef4444' : padColors[i];
+                    gCtx.fillStyle = isWrong ? '#ef4444' : (isActive ? padColors[i] : padColors[i] + '4d');
+                    gCtx.strokeStyle = isActive || isWrong ? '#ffffff' : padColors[i] + 'bb';
+                    gCtx.lineWidth = isActive || isWrong ? 4 : 2;
+                    gCtx.beginPath();
+                    gCtx.roundRect(x, y, cellW, cellH, Math.min(18, cellW * 0.12));
+                    gCtx.fill();
+                    gCtx.stroke();
+
+                    gCtx.shadowBlur = 0;
+                    gCtx.fillStyle = isActive ? '#ffffff' : '#ffffffaa';
+                    gCtx.font = `bold ${Math.max(18, Math.min(30, cellH * 0.32))}px Arial`;
+                    gCtx.textAlign = 'center';
+                    gCtx.textBaseline = 'middle';
+                    gCtx.fillText(String(i + 1), x + cellW / 2, y + cellH / 2);
+                    gCtx.restore();
                 }
+                gCtx.textAlign = 'left';
+                gCtx.textBaseline = 'alphabetic';
             }
 
+            function flashPad(index, duration, callback) {
+                activePad = index;
+                try { synth.triggerAttackRelease(notes[index], '8n'); } catch (_) {}
+                drawPads();
+                gameDelay(() => {
+                    activePad = -1;
+                    drawPads();
+                    if (callback) callback();
+                }, duration, session);
+            }
+
+            function playSequenceAt(index = 0) {
+                if (!isGameRunning || session !== gameSessionId) return;
+                if (index >= sequence.length) {
+                    showingSequence = false;
+                    playerIndex = 0;
+                    statusText = 'Giliranmu — ulangi pola!';
+                    drawPads();
+                    return;
+                }
+
+                const pace = Math.max(330, 650 - level * 28);
+                flashPad(sequence[index], Math.round(pace * 0.58), () => {
+                    gameDelay(() => playSequenceAt(index + 1), Math.round(pace * 0.42), session);
+                });
+            }
+
+            function startRound() {
+                showingSequence = true;
+                statusText = 'Perhatikan polanya...';
+                drawPads();
+                gameDelay(() => playSequenceAt(0), 550, session);
+            }
+
+            function nextLevel() {
+                level += 1;
+                gameScore = level - 1;
+                scoreText.innerText = `Level ${level}`;
+                sequence.push(randomPad());
+                statusText = 'Benar! Pola bertambah...';
+                drawPads();
+                gameDelay(startRound, 850, session);
+            }
+
+            scoreText.innerText = 'Level 1';
             drawPads();
+            startRound();
+
+            gCanvas.onpointerdown = event => {
+                if (!isGameRunning || session !== gameSessionId || showingSequence) return;
+                event.preventDefault();
+                const rect = gCanvas.getBoundingClientRect();
+                const mx = (event.clientX - rect.left) * (gCanvas.width / rect.width);
+                const my = (event.clientY - rect.top) * (gCanvas.height / rect.height);
+                const { top, gap, cellW, cellH } = getGrid();
+
+                let clicked = -1;
+                for (let i = 0; i < 9; i++) {
+                    const col = i % 3;
+                    const row = Math.floor(i / 3);
+                    const x = gap + col * (cellW + gap);
+                    const y = top + gap + row * (cellH + gap);
+                    if (mx >= x && mx <= x + cellW && my >= y && my <= y + cellH) {
+                        clicked = i;
+                        break;
+                    }
+                }
+                if (clicked < 0) return;
+
+                flashPad(clicked, 180);
+                if (clicked === sequence[playerIndex]) {
+                    playerIndex += 1;
+                    if (playerIndex === sequence.length) {
+                        showingSequence = true;
+                        statusText = 'Urutan tepat!';
+                        gameDelay(nextLevel, 420, session);
+                    }
+                } else {
+                    showingSequence = true;
+                    wrongPad = clicked;
+                    statusText = `Salah — seharusnya panel ${sequence[playerIndex] + 1}`;
+                    try { synth.triggerAttackRelease('C3', '2n'); } catch (_) {}
+                    drawPads();
+                    gameDelay(() => {
+                        finishGame('Memori Terputus', `Kamu mencapai Level ${level} dengan pola sepanjang ${sequence.length} langkah.`);
+                    }, 700, session);
+                }
+            };
         }
 
+        // --- GAME 3: Audit Strike ---
         function runAuditStrike(session) {
             const ui = document.getElementById('audit-ui');
             const scoreText = document.getElementById('audit-score');
@@ -2670,19 +3036,273 @@
 
             let time = 30;
             let score = 0;
+            let combo = 0;
+            let lastHole = -1;
+            let activeEntity = null;
+            const hitEffects = [];
+            const holes = [];
+
+            const bonkSynth = registerGameAudio(new Tone.MembraneSynth({
+                pitchDecay: 0.025,
+                octaves: 4,
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.001, decay: 0.16, sustain: 0, release: 0.2 }
+            }).toDestination());
+            bonkSynth.volume.value = -6;
+
+            const errorSynth = registerGameAudio(new Tone.Synth({
+                oscillator: { type: 'sawtooth' },
+                envelope: { attack: 0.005, decay: 0.18, sustain: 0, release: 0.22 }
+            }).toDestination());
+            errorSynth.volume.value = -11;
+
+            function rebuildHoles() {
+                holes.length = 0;
+                const top = 72;
+                const usableHeight = gCanvas.height - top;
+                for (let i = 0; i < 6; i++) {
+                    const col = i % 3;
+                    const row = Math.floor(i / 3);
+                    holes.push({
+                        x: (col + 0.5) * (gCanvas.width / 3),
+                        y: top + (row + 0.68) * (usableHeight / 2)
+                    });
+                }
+            }
+            rebuildHoles();
+
             scoreText.innerText = score;
             timeText.innerText = time;
+
+            function scheduleNextEntity(delay = 350 + Math.random() * 350) {
+                gameDelay(() => {
+                    if (activeEntity) return;
+                    let holeIndex = Math.floor(Math.random() * holes.length);
+                    if (holeIndex === lastHole) holeIndex = (holeIndex + 1 + Math.floor(Math.random() * 5)) % holes.length;
+                    lastHole = holeIndex;
+
+                    const elapsed = 30 - time;
+                    const life = Math.max(620, 1120 - elapsed * 14 - Math.random() * 180);
+                    activeEntity = {
+                        holeIndex,
+                        type: Math.random() < 0.72 ? 'rat' : 'budget',
+                        bornAt: performance.now(),
+                        life
+                    };
+                }, delay, session);
+            }
+            scheduleNextEntity(250);
 
             gameTimer = setInterval(() => {
                 if (!isGameRunning || session !== gameSessionId) return;
                 time -= 1;
                 timeText.innerText = time;
-                if (time <= 0) finishGame('Audit Selesai!', `Skor akhir ${score}.`);
+                if (time <= 0) {
+                    finishGame('Audit Selesai!', `Skor akhir ${score}. Combo tertinggi membantumu menyelamatkan anggaran negara.`);
+                }
             }, 1000);
+
+            function drawHole(hole) {
+                gCtx.save();
+                gCtx.fillStyle = '#050505';
+                gCtx.shadowBlur = 16;
+                gCtx.shadowColor = '#000000';
+                gCtx.beginPath();
+                gCtx.ellipse(hole.x, hole.y, 48, 16, 0, 0, Math.PI * 2);
+                gCtx.fill();
+                gCtx.shadowBlur = 0;
+                gCtx.strokeStyle = '#475569';
+                gCtx.lineWidth = 2;
+                gCtx.stroke();
+                gCtx.restore();
+            }
+
+            function drawRat(x, y, rise) {
+                gCtx.save();
+                gCtx.translate(x, y);
+                gCtx.shadowBlur = 18;
+                gCtx.shadowColor = '#ef4444';
+
+                // Ekor.
+                gCtx.strokeStyle = '#fca5a5';
+                gCtx.lineWidth = 5;
+                gCtx.beginPath();
+                gCtx.moveTo(24, 20);
+                gCtx.bezierCurveTo(52, 24, 49, -5, 64, -9);
+                gCtx.stroke();
+
+                // Tubuh dan kepala.
+                gCtx.fillStyle = '#7f1d1d';
+                gCtx.beginPath();
+                gCtx.ellipse(0, 14, 31, 27, 0, 0, Math.PI * 2);
+                gCtx.fill();
+                gCtx.fillStyle = '#ef4444';
+                gCtx.beginPath();
+                gCtx.arc(0, -5, 28, 0, Math.PI * 2);
+                gCtx.fill();
+
+                // Telinga.
+                gCtx.fillStyle = '#fca5a5';
+                gCtx.beginPath();
+                gCtx.arc(-19, -25, 10, 0, Math.PI * 2);
+                gCtx.arc(19, -25, 10, 0, Math.PI * 2);
+                gCtx.fill();
+
+                // Mata marah.
+                gCtx.shadowBlur = 0;
+                gCtx.strokeStyle = '#ffffff';
+                gCtx.lineWidth = 3;
+                gCtx.beginPath();
+                gCtx.moveTo(-18, -13); gCtx.lineTo(-5, -9);
+                gCtx.moveTo(18, -13); gCtx.lineTo(5, -9);
+                gCtx.stroke();
+                gCtx.fillStyle = '#ffffff';
+                gCtx.beginPath();
+                gCtx.arc(-10, -7, 4, 0, Math.PI * 2);
+                gCtx.arc(10, -7, 4, 0, Math.PI * 2);
+                gCtx.fill();
+                gCtx.fillStyle = '#111827';
+                gCtx.beginPath();
+                gCtx.arc(-10, -7, 2, 0, Math.PI * 2);
+                gCtx.arc(10, -7, 2, 0, Math.PI * 2);
+                gCtx.fill();
+
+                // Moncong dan gigi.
+                gCtx.fillStyle = '#fecaca';
+                gCtx.beginPath();
+                gCtx.arc(0, 4, 5, 0, Math.PI * 2);
+                gCtx.fill();
+                gCtx.fillStyle = '#ffffff';
+                gCtx.fillRect(-7, 10, 6, 9);
+                gCtx.fillRect(1, 10, 6, 9);
+
+                gCtx.fillStyle = '#fde68a';
+                gCtx.font = 'bold 11px Arial';
+                gCtx.textAlign = 'center';
+                gCtx.fillText('FRAUD', 0, 34);
+                gCtx.restore();
+            }
+
+            function drawBudget(x, y) {
+                gCtx.save();
+                gCtx.translate(x, y);
+                gCtx.shadowBlur = 18;
+                gCtx.shadowColor = '#22c55e';
+
+                for (let i = 2; i >= 0; i--) {
+                    gCtx.fillStyle = i === 0 ? '#22c55e' : '#15803d';
+                    gCtx.fillRect(-31 + i * 2, -15 + i * 7, 62, 33);
+                    gCtx.strokeStyle = '#bbf7d0';
+                    gCtx.lineWidth = 2;
+                    gCtx.strokeRect(-31 + i * 2, -15 + i * 7, 62, 33);
+                }
+                gCtx.shadowBlur = 0;
+                gCtx.fillStyle = '#ecfdf5';
+                gCtx.beginPath();
+                gCtx.arc(0, 1, 10, 0, Math.PI * 2);
+                gCtx.fill();
+                gCtx.fillStyle = '#166534';
+                gCtx.font = 'bold 12px Arial';
+                gCtx.textAlign = 'center';
+                gCtx.fillText('APBN', 0, 5);
+                gCtx.restore();
+            }
+
+            function drawEffects() {
+                for (let i = hitEffects.length - 1; i >= 0; i--) {
+                    const effect = hitEffects[i];
+                    effect.life -= 1;
+                    effect.y -= 0.8;
+                    gCtx.save();
+                    gCtx.globalAlpha = Math.max(0, effect.life / 38);
+                    gCtx.fillStyle = effect.color;
+                    gCtx.font = 'bold 24px Arial';
+                    gCtx.textAlign = 'center';
+                    gCtx.fillText(effect.text, effect.x, effect.y);
+                    gCtx.restore();
+                    if (effect.life <= 0) hitEffects.splice(i, 1);
+                }
+                gCtx.textAlign = 'left';
+            }
+
+            function draw(now = performance.now()) {
+                if (!isGameRunning || session !== gameSessionId) return;
+                gCtx.clearRect(0, 0, gCanvas.width, gCanvas.height);
+
+                const bg = gCtx.createLinearGradient(0, 0, 0, gCanvas.height);
+                bg.addColorStop(0, '#140b07');
+                bg.addColorStop(1, '#050508');
+                gCtx.fillStyle = bg;
+                gCtx.fillRect(0, 0, gCanvas.width, gCanvas.height);
+
+                holes.forEach(drawHole);
+
+                if (activeEntity) {
+                    const progress = (now - activeEntity.bornAt) / activeEntity.life;
+                    if (progress >= 1) {
+                        if (activeEntity.type === 'rat') combo = 0;
+                        activeEntity = null;
+                        scheduleNextEntity(220 + Math.random() * 360);
+                    } else {
+                        const rise = Math.sin(Math.PI * progress);
+                        const hole = holes[activeEntity.holeIndex];
+                        const entityY = hole.y - rise * 67;
+                        activeEntity.x = hole.x;
+                        activeEntity.y = entityY;
+                        activeEntity.rise = rise;
+                        if (activeEntity.type === 'rat') drawRat(hole.x, entityY, rise);
+                        else drawBudget(hole.x, entityY);
+                    }
+                }
+
+                drawEffects();
+                gCtx.fillStyle = '#fbbf24';
+                gCtx.font = 'bold 16px "Courier New"';
+                gCtx.fillText(`Combo x${combo}`, 16, gCanvas.height - 16);
+                gCtx.textAlign = 'right';
+                gCtx.fillStyle = '#94a3b8';
+                gCtx.fillText('Tikus +10/+combo • APBN −15', gCanvas.width - 16, gCanvas.height - 16);
+                gCtx.textAlign = 'left';
+
+                gameRafId = requestAnimationFrame(draw);
+            }
+            draw();
+
+            gCanvas.onpointerdown = event => {
+                if (!isGameRunning || session !== gameSessionId || !activeEntity || activeEntity.rise < 0.23) return;
+                event.preventDefault();
+                const rect = gCanvas.getBoundingClientRect();
+                const mx = (event.clientX - rect.left) * (gCanvas.width / rect.width);
+                const my = (event.clientY - rect.top) * (gCanvas.height / rect.height);
+                const dx = (mx - activeEntity.x) / 42;
+                const dy = (my - activeEntity.y) / 48;
+                if (dx * dx + dy * dy > 1) return;
+
+                if (activeEntity.type === 'rat') {
+                    combo += 1;
+                    const earned = 10 + Math.min(10, Math.max(0, combo - 1) * 2);
+                    score += earned;
+                    hitEffects.push({ x: activeEntity.x, y: activeEntity.y - 32, text: `+${earned}`, color: '#fbbf24', life: 38 });
+                    try { bonkSynth.triggerAttackRelease(combo >= 4 ? 'G3' : 'C3', '16n'); } catch (_) {}
+                } else {
+                    combo = 0;
+                    score = Math.max(0, score - 15);
+                    hitEffects.push({ x: activeEntity.x, y: activeEntity.y - 32, text: '−15 APBN!', color: '#ef4444', life: 38 });
+                    try { errorSynth.triggerAttackRelease('C3', '8n'); } catch (_) {}
+                    const gameContainer = document.getElementById('game-container');
+                    gameContainer.classList.add('ring-4', 'ring-red-500/70');
+                    gameDelay(() => gameContainer.classList.remove('ring-4', 'ring-red-500/70'), 180, session);
+                }
+
+                scoreText.innerText = score;
+                activeEntity = null;
+                scheduleNextEntity(160 + Math.random() * 280);
+            };
         }
 
-        /* --- 10. Fitur Layar Apresiasi & Eksternal Link --- */
+        // --- 12. Fitur Layar Apresiasi & Eksternal Link ---
         let externalLaunchTimer = null;
+        let externalLaunchSynth = null;
         let externalLaunchInProgress = false;
 
         function launchExternal(event, url, siteName) {
@@ -2695,16 +3315,43 @@
             const targetName = document.getElementById('target-site-name');
             targetName.innerText = String(siteName || 'SUMBER BELAJAR').toUpperCase();
 
+            // Redupkan musik utama supaya chord apresiasi terdengar jelas.
             if (backgroundMusic && !backgroundMusic.paused) {
                 fadeBackgroundMusic(0, 500, true);
             }
 
+            // Tampilkan layar tribute dan mulai ulang animasi dari awal.
             overlay.classList.remove('hide');
             requestAnimationFrame(() => overlay.classList.remove('opacity-0'));
             scrollText.classList.remove('animate-scroll-up');
             void scrollText.offsetWidth;
             scrollText.classList.add('animate-scroll-up');
 
+            // Sound apresiasi sinematik asli.
+            unlockAudioEngine().then(isReady => {
+                if (!isReady || typeof Tone === 'undefined') return;
+                try {
+                    if (externalLaunchSynth) {
+                        try { externalLaunchSynth.dispose(); } catch (_) {}
+                    }
+                    externalLaunchSynth = new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: 'sine' },
+                        envelope: { attack: 1.6, decay: 0.9, sustain: 0.72, release: 3.5 }
+                    }).toDestination();
+                    externalLaunchSynth.volume.value = -10;
+
+                    const now = Tone.now() + 0.05;
+                    externalLaunchSynth.triggerAttackRelease(['C4', 'E4', 'G4', 'B4', 'D5'], '2n', now);
+                    externalLaunchSynth.triggerAttackRelease(['F3', 'A3', 'C4', 'E4', 'G4'], '2n', now + 2);
+                    externalLaunchSynth.triggerAttackRelease(['A3', 'C4', 'E4', 'G4', 'B4'], '2n', now + 4);
+                    externalLaunchSynth.triggerAttackRelease(['G3', 'C4', 'D4', 'G4'], '1m', now + 6.5);
+                } catch (error) {
+                    console.warn('Sound apresiasi tidak dapat dimainkan:', error);
+                }
+            });
+
+            // Navigasi di tab yang sama setelah tribute selesai.
+            // Ini bukan popup, sehingga aman dari popup blocker di desktop maupun mobile.
             if (externalLaunchTimer) clearTimeout(externalLaunchTimer);
             externalLaunchTimer = setTimeout(() => {
                 try {
@@ -2713,21 +3360,27 @@
                     externalLaunchInProgress = false;
                     overlay.classList.add('opacity-0');
                     setTimeout(() => overlay.classList.add('hide'), 700);
+                    showToast('Tautan gagal dibuka', 'Silakan klik kembali sumber belajar yang dipilih.');
                 }
             }, 10500);
 
             return false;
         }
-
+// UPDATE VARIABEL INI setiap kali kamu mau memunculkan catatan baru
         const CURRENT_APP_VERSION = "v1.4"; 
 
         function checkUpdateNote() {
             const lastSeenVersion = localStorage.getItem('4forasp_version_seen');
+            
+            // Jika versi yang tersimpan berbeda dengan versi saat ini (atau belum pernah lihat)
             if (lastSeenVersion !== CURRENT_APP_VERSION) {
                 document.getElementById('update-version-badge').innerText = CURRENT_APP_VERSION;
                 const modal = document.getElementById('update-note-modal');
                 const content = document.getElementById('update-note-content');
+                
                 modal.classList.remove('hide');
+                
+                // Sedikit delay untuk memicu animasi masuk (fade in & scale up)
                 setTimeout(() => {
                     modal.classList.remove('opacity-0');
                     content.classList.remove('scale-95');
@@ -2739,22 +3392,34 @@
         function closeUpdateNote() {
             const modal = document.getElementById('update-note-modal');
             const content = document.getElementById('update-note-content');
+            
+            // Animasi keluar
             modal.classList.add('opacity-0');
             content.classList.remove('scale-100');
             content.classList.add('scale-95');
+            
+            // Simpan ke local storage agar tidak muncul lagi
             localStorage.setItem('4forasp_version_seen', CURRENT_APP_VERSION);
-            setTimeout(() => modal.classList.add('hide'), 300);
+            
+            setTimeout(() => {
+                modal.classList.add('hide');
+            }, 300);
         }
-
-        // Pemutar Audio ElevenLabs + Subtitle
+// Fungsi untuk memutar MP3 ElevenLabs & Menampilkan Subtitle
         function playElevenLabsAudio(onComplete) {
+            // 1. Panggil file audionya (Pastikan nama filenya "sapaan.mp3")
             const audio = new Audio('sapaan.mp3'); 
+            
             const subtitleBox = document.getElementById('subtitle-container');
             const subtitleText = document.getElementById('subtitle-text');
             
+            // 2. Tampilkan kotak subtitle (Efek Fade in & Naik)
             subtitleBox.classList.remove('opacity-0', 'translate-y-4');
             subtitleBox.classList.add('opacity-100', 'translate-y-0');
 
+            // 3. Pengaturan Timing Subtitle
+            // Angka di depan adalah milidetik (misal: 3500 = 3.5 detik). 
+            // Silakan diubah-ubah angkanya agar pas dengan tempo bicara audionya.
             const subtitles = [
                 [0, "Come on, let's do this!"],
                 [2000, "Hey! I know studying right now is exhausting."],
@@ -2765,24 +3430,34 @@
                 [14000, "You got this!"]
             ];
 
+            // Looping untuk mengganti teks sesuai waktu yang ditentukan
             subtitles.forEach(sub => {
-                setTimeout(() => { subtitleText.innerText = sub[1]; }, sub[0]);
+                setTimeout(() => {
+                    subtitleText.innerText = sub[1];
+                }, sub[0]);
             });
 
+            // 4. Putar Audio dan Deteksi Kapan Selesai
             audio.play().catch(e => {
+                console.warn("Audio autoplay diblokir browser:", e);
+                // Jika error/diblokir, musik background tetap akan dilanjutkan
                 if(onComplete) onComplete();
                 subtitleBox.classList.add('opacity-0', 'translate-y-4');
             });
 
+            // Apa yang terjadi kalau audionya sudah selesai?
             audio.onended = () => {
+                // Sembunyikan subtitle
                 subtitleBox.classList.remove('opacity-100', 'translate-y-0');
                 subtitleBox.classList.add('opacity-0', 'translate-y-4');
+                
+                // Lanjutkan ke musik latar (The Sunlit Shelf)
                 if (onComplete) onComplete();
             };
         }
-
-        // Fitur Floating Pomodoro PiP
+// --- FITUR FLOATING POMODORO (Document Picture-in-Picture) ---
         let pipWindow = null;
+
         async function togglePomodoroPiP() {
             if (!('documentPictureInPicture' in window)) {
                 showToast("Tidak Didukung", "Browser kamu belum mendukung floating window mode ini.");
@@ -2795,7 +3470,10 @@
             }
 
             try {
-                pipWindow = await window.documentPictureInPicture.requestWindow({ width: 300, height: 260 });
+                pipWindow = await window.documentPictureInPicture.requestWindow({
+                    width: 300,
+                    height: 260
+                });
 
                 [...document.styleSheets].forEach((styleSheet) => {
                     try {
@@ -2820,8 +3498,12 @@
                     </div>
                     <div class="text-4xl font-digital font-bold text-white text-glow mb-4 tracking-widest" id="pip-display">25:00</div>
                     <div class="flex gap-2 w-full">
-                        <button id="pip-toggle-btn" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 font-bold text-xs shadow-lg transition-all">Mulai</button>
-                        <button id="pip-reset-btn" class="w-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs transition-colors"><i class="fas fa-redo-alt"></i></button>
+                        <button id="pip-toggle-btn" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 font-bold text-xs shadow-lg transition-all">
+                            Mulai
+                        </button>
+                        <button id="pip-reset-btn" class="w-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs transition-colors">
+                            <i class="fas fa-redo-alt"></i>
+                        </button>
                     </div>
                 `;
                 pipWindow.document.body.appendChild(container);
@@ -2849,12 +3531,24 @@
                 const syncInterval = setInterval(updatePipElements, 200);
                 updatePipElements();
 
-                pipWindow.document.getElementById('pip-toggle-btn').onclick = () => { togglePomodoro(); updatePipElements(); };
-                pipWindow.document.getElementById('pip-reset-btn').onclick = () => { resetPomodoro(); updatePipElements(); };
-                pipWindow.addEventListener('pagehide', () => { clearInterval(syncInterval); pipWindow = null; });
+                pipWindow.document.getElementById('pip-toggle-btn').onclick = () => {
+                    togglePomodoro();
+                    updatePipElements();
+                };
+                pipWindow.document.getElementById('pip-reset-btn').onclick = () => {
+                    resetPomodoro();
+                    updatePipElements();
+                };
+
+                pipWindow.addEventListener('pagehide', () => {
+                    clearInterval(syncInterval);
+                    pipWindow = null;
+                });
 
                 showToast("Floating Window Aktif", "Timer Pomodoro sekarang melayang di atas layar!");
+
             } catch (error) {
+                console.warn("Gagal membuka Picture-in-Picture:", error);
                 showToast("Gagal", "Fitur floating window diblokir oleh browser.");
             }
         }
